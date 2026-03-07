@@ -11,8 +11,6 @@ import java.util.UUID;
 
 @Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class LoginResponse {
     private UUID id;
     private String name;

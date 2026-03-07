@@ -10,8 +10,6 @@ import java.util.Date;
 
 @Data
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class TokenResponse {
     private String token;

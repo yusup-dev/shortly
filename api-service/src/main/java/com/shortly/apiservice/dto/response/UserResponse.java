@@ -16,8 +16,6 @@ import java.util.UUID;
 
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class UserResponse {
 
