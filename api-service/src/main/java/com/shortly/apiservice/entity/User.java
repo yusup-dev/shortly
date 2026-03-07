@@ -48,4 +48,7 @@ public class User {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    @OneToMany(mappedBy = "user")
+    private List<ApiKey> apiKeys;
 }

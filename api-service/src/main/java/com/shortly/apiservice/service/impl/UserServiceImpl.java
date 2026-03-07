@@ -26,6 +26,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+    private final ApiKeyService apiKeyService;
 
     @Override @Transactional
     public UserResponse register(UserRegisterRequest userRegisterRequest) {
@@ -54,6 +55,9 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         User saved = userRepository.save(user);
+
+        apiKeyService.createApiKey(saved.getId());
+
         return UserResponse.from(saved);
     }
 
