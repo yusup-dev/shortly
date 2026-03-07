@@ -27,10 +27,11 @@ public class UserResponse {
     private StatusType status;
     private RoleType role;
     private PlanType plan;
+    private String apiKey;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    public static UserResponse from(User user) {
+    public static UserResponse from(User user, String apiKey) {
         if (user == null) {
             return null;
         }
@@ -40,6 +41,7 @@ public class UserResponse {
                 .name(user.getName())
                 .email(user.getEmail())
                 .status(user.getStatus())
+                .apiKey(apiKey)
                 .plan(user.getPlan().getName())
                 .role(user.getRole().getName())
                 .createdAt(user.getCreatedAt())

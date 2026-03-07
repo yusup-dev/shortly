@@ -4,5 +4,5 @@ import java.util.UUID;
 
 public interface ApiKeyService {
 
-    void createApiKey(UUID userId);
+    String createApiKey(UUID userId);
 }

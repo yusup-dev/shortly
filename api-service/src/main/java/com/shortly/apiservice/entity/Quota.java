@@ -1,29 +1,27 @@
 package com.shortly.apiservice.entity;
 
-import com.shortly.apiservice.enumaration.PlanType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "plans")
-public class Plan {
+@Table(name = "quotas")
+public class Quota {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "name", length = 20, nullable = false)
-    private PlanType name;
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "api_key_id")
+    private ApiKey apiKey;
 
     @Column(name = "max_requests_per_day", nullable = false)
     private Integer maxRequestsPerDay;
@@ -33,7 +31,4 @@ public class Plan {
 
     @Column(name = "max_bulk", nullable = false)
     private Integer maxBulk;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

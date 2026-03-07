@@ -1,11 +1,13 @@
 package com.shortly.apiservice.service.impl;
 
 import com.shortly.apiservice.entity.ApiKey;
+import com.shortly.apiservice.entity.Quota;
 import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.enumaration.KeyStatusType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.repository.ApiKeyRepository;
+import com.shortly.apiservice.repository.QuotaRepository;
 import com.shortly.apiservice.repository.UserRepository;
 import com.shortly.apiservice.service.ApiKeyService;
 import com.shortly.apiservice.utils.ApiKeyGenerator;
@@ -22,9 +24,10 @@ public class ApiKeyServiceImpl implements ApiKeyService {
 
     private final ApiKeyRepository apiKeyRepository;
     private final UserRepository userRepository;
+    private final QuotaRepository quotaRepository;
 
     @Override
-    public void createApiKey(UUID userId) {
+    public String createApiKey(UUID userId) {
         String rawKey = ApiKeyGenerator.generateApiKey();
         String hash = ApiKeyHashUtil.hash(rawKey);
 
@@ -40,6 +43,17 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .status(KeyStatusType.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .build();
-        apiKeyRepository.save(apiKey);
+        ApiKey saved = apiKeyRepository.save(apiKey);
+
+        Quota quota = Quota.builder()
+                .id(UUID.randomUUID())
+                .apiKey(saved)
+                .maxRequestsPerDay(user.getPlan().getMaxRequestsPerDay())
+                .maxUrlsPerKey(user.getPlan().getMaxUrlsPerKey())
+                .maxBulk(user.getPlan().getMaxBulk())
+                .build();
+        quotaRepository.save(quota);
+
+        return rawKey;
     }
 }

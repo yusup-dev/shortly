@@ -65,9 +65,9 @@ public class UserServiceImpl implements UserService {
 
         User saved = userRepository.save(user);
 
-        apiKeyService.createApiKey(saved.getId());
+        String apiKey = apiKeyService.createApiKey(saved.getId());
 
-        return UserResponse.from(saved);
+        return UserResponse.from(saved, apiKey);
     }
 
     @Override
