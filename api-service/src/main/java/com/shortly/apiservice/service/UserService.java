@@ -5,4 +5,5 @@ import com.shortly.apiservice.dto.response.UserResponse;
 
 public interface UserService {
     UserResponse register(UserRegisterRequest userRegisterRequest);
+    boolean existsByEmail(String email);
 }

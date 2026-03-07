@@ -21,9 +21,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public UserInfo authenticate(AuthRequest authRequest) {
-
-        log.info("Apakah ada password : {}", authRequest.getPassword());
-
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(authRequest.getEmail(),

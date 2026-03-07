@@ -1,6 +1,5 @@
 package com.shortly.apiservice.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -8,19 +7,18 @@ import org.hibernate.annotations.UpdateTimestamp;
 import com.shortly.apiservice.enumaration.StatusType;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-@Getter
-@Setter
-@Builder
 @Entity
-@NoArgsConstructor
-@AllArgsConstructor
 @Table(name = "users")
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class User {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
     @Column(name = "name", length = 20, nullable = false)
@@ -38,7 +36,6 @@ public class User {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Role role;
 
     @CreationTimestamp

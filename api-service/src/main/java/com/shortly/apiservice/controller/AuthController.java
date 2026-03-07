@@ -2,13 +2,16 @@ package com.shortly.apiservice.controller;
 
 import com.shortly.apiservice.dto.UserInfo;
 import com.shortly.apiservice.dto.request.AuthRequest;
+import com.shortly.apiservice.dto.request.UserRegisterRequest;
 import com.shortly.apiservice.dto.response.ApiResponse;
 import com.shortly.apiservice.dto.response.AuthResponse;
 import com.shortly.apiservice.dto.response.TokenResponse;
+import com.shortly.apiservice.dto.response.UserResponse;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.AuthService;
 import com.shortly.apiservice.service.JwtService;
+import com.shortly.apiservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,7 @@ public class AuthController {
 
     private final JwtService jwtService;
     private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
@@ -42,6 +46,25 @@ public class AuthController {
                             .success(true)
                             .message("Login successfully!")
                             .data(AuthResponse.from(userInfo, tokenResponse))
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApplicationException(ExceptionType.INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserResponse>> login(
+            @Valid @RequestBody UserRegisterRequest userRegisterRequest
+            ) {
+        try {
+            UserResponse response = userService.register(userRegisterRequest);
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    ApiResponse.<UserResponse>builder()
+                            .success(true)
+                            .message("Register successfully!")
+                            .data(response)
                             .build()
             );
         } catch (Exception e) {

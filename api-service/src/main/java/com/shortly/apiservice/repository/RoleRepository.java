@@ -1,6 +1,7 @@
 package com.shortly.apiservice.repository;
 
 import com.shortly.apiservice.entity.Role;
+import com.shortly.apiservice.enumaration.RoleType;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,4 +18,6 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
        SELECT r.* FROM roles r LEFT JOIN users u ON r.id = u.role_id WHERE u.id = :userId
     """, nativeQuery = true)
     Optional<Role> findByUserId(@Param("userId") UUID userId);
+
+    Optional<Role> findByName(RoleType name);
 }
