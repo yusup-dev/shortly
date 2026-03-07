@@ -2,12 +2,15 @@ package com.shortly.apiservice.service.impl;
 
 import com.shortly.apiservice.dto.request.UserRegisterRequest;
 import com.shortly.apiservice.dto.response.UserResponse;
+import com.shortly.apiservice.entity.Plan;
 import com.shortly.apiservice.entity.Role;
 import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.ExceptionType;
+import com.shortly.apiservice.enumaration.PlanType;
 import com.shortly.apiservice.enumaration.RoleType;
 import com.shortly.apiservice.enumaration.StatusType;
 import com.shortly.apiservice.exception.ApplicationException;
+import com.shortly.apiservice.repository.PlanRepository;
 import com.shortly.apiservice.repository.RoleRepository;
 import com.shortly.apiservice.repository.UserRepository;
 import com.shortly.apiservice.service.ApiKeyService;
@@ -27,6 +30,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
     private final ApiKeyService apiKeyService;
+    private final PlanRepository planRepository;
 
     @Override @Transactional
     public UserResponse register(UserRegisterRequest userRegisterRequest) {
@@ -45,10 +49,15 @@ public class UserServiceImpl implements UserService {
                 () -> new ApplicationException(ExceptionType.ROLE_NOT_FOUND)
         );
 
+        Plan plan = planRepository.findByName(PlanType.FREE).orElseThrow(
+                () -> new ApplicationException(ExceptionType.RESOURCE_NOT_FOUND, "Plan not found")
+        );
+
         User user = User.builder()
                 .id(UUID.randomUUID())
                 .name(userRegisterRequest.getName())
                 .role(role)
+                .plan(plan)
                 .email(userRegisterRequest.getEmail())
                 .password(encodedPassword)
                 .status(StatusType.ACTIVE)

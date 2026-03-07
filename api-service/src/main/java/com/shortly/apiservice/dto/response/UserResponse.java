@@ -3,6 +3,7 @@ package com.shortly.apiservice.dto.response;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.shortly.apiservice.entity.User;
+import com.shortly.apiservice.enumaration.PlanType;
 import com.shortly.apiservice.enumaration.RoleType;
 import com.shortly.apiservice.enumaration.StatusType;
 import lombok.AllArgsConstructor;
@@ -25,6 +26,7 @@ public class UserResponse {
     private String email;
     private StatusType status;
     private RoleType role;
+    private PlanType plan;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -38,7 +40,8 @@ public class UserResponse {
                 .name(user.getName())
                 .email(user.getEmail())
                 .status(user.getStatus())
-                .role(user.getRole() != null ? user.getRole().getName() : null)
+                .plan(user.getPlan().getName())
+                .role(user.getRole().getName())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
