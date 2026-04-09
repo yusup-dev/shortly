@@ -30,7 +30,7 @@ public class ApiSecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> registry.requestMatchers(
-                                "/auth/**",
+                                "/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/webhook/xendit/**")
