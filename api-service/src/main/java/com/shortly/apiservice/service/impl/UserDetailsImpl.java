@@ -7,6 +7,7 @@ import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.repository.RoleRepository;
 import com.shortly.apiservice.repository.UserRepository;
+import com.shortly.apiservice.repository.projection.UserAuthProjection;
 import com.shortly.apiservice.service.CacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,49 +23,30 @@ import java.util.Optional;
 public class UserDetailsImpl implements UserDetailsService {
 
     private final UserRepository userRepository;
-    private final RoleRepository roleRepository;
     private final CacheService cacheService;
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        String USER_CACHE_KEY = "cache:user:";
-        String ROLE_CACHE_KEY = "cache:role:";
+        String cacheKey = "auth:user:" + email;
 
-        String userCacheKey = USER_CACHE_KEY + email;
-        String roleCacheKey = ROLE_CACHE_KEY + email;
-
-        Optional<User> cachedUser = cacheService.get(userCacheKey, User.class);
-        Optional<Role> cachedRole = cacheService.get(roleCacheKey, Role.class);
-
-        if (cachedUser.isPresent() && cachedRole.isPresent()) {
-            User userFromDb = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new ApplicationException(ExceptionType.USER_NOT_FOUND, "User not found with: " + email));
-
-            return UserInfo.builder()
-                    .user(userFromDb)
-                    .role(cachedRole.get())
-                    .build();
+        Optional<UserInfo> cached = cacheService.get(cacheKey, UserInfo.class);
+        if (cached.isPresent()) {
+            return cached.get();
         }
 
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApplicationException(ExceptionType.USER_NOT_FOUND, "User not found with: " + email));
-
-        Role role = roleRepository.findByUserId(user.getId())
-                .orElseThrow(() -> new ApplicationException(ExceptionType.USER_NOT_FOUND, "Role not found for userId: " +  user.getId()));
+        UserAuthProjection data = userRepository.findAuthByEmail(email).orElseThrow(
+                () -> new ApplicationException(ExceptionType.RESOURCE_NOT_FOUND, "User not found!")
+        );
 
         UserInfo userInfo = UserInfo.builder()
-                .user(user)
-                .role(role)
+                .id(data.getId())
+                .email(data.getEmail())
+                .password(data.getPassword())
+                .role(data.getRoleName())
                 .build();
 
-        User cacheableUser = User.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .build();
-
-        cacheService.put(userCacheKey, cacheableUser, Duration.ofMinutes(10));
-        cacheService.put(roleCacheKey, role, Duration.ofMinutes(10));
+        cacheService.put(cacheKey, userInfo, Duration.ofHours(24));
 
         return userInfo;
     }

@@ -24,13 +24,14 @@ public class ApiSecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AuthenticationProvider authenticationProvider;
+    private final RateLimitFilter rateLimitFilter;
 
     @Bean
     public SecurityFilterChain configure(HttpSecurity http) throws Exception {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> registry.requestMatchers(
-                                "/**",
+                                "/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/webhook/xendit/**")
@@ -39,7 +40,8 @@ public class ApiSecurityConfig {
                     configure.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })
                 .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(jwtAuthenticationFilter, RateLimitFilter.class)
                 .exceptionHandling(configure ->
                         configure.authenticationEntryPoint((request,
                                                             response,

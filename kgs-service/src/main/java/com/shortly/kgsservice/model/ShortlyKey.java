@@ -1,9 +1,10 @@
 package com.shortly.kgsservice.model;
 
 import com.shortly.kgsservice.enumaration.StatusType;
-import jakarta.persistence.Id;
 import lombok.*;
 import org.bson.types.ObjectId;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ public class ShortlyKey {
     @Id
     private ObjectId id;
 
+    @Indexed(unique = true)
     private String key;
 
     private StatusType status;

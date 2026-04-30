@@ -40,7 +40,7 @@ class KeyServiceIntegrationTest {
 
         // insert ke Mongo
         ShortlyKey key = ShortlyKey.builder()
-                .key("integration123")
+                .key("loveIntegration")
                 .status(StatusType.AVAILABLE)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -49,7 +49,7 @@ class KeyServiceIntegrationTest {
 
         // push ke Redis
         redisTemplate.opsForList()
-                .leftPush(Constant.REDIS_QUEUE_NAME, "integration123");
+                .leftPush(Constant.REDIS_QUEUE_NAME, "loveIntegration");
     }
 
     @Test
@@ -57,11 +57,29 @@ class KeyServiceIntegrationTest {
 
         String result = keyService.getKey();
 
-        assertEquals("integration123", result);
+        assertEquals("loveIntegration", result);
 
-        ShortlyKey updated = shortlyKeyRepository.findByKey("integration123")
+        ShortlyKey updated = shortlyKeyRepository.findByKey("loveIntegration")
                 .orElseThrow();
 
         assertEquals(StatusType.USED, updated.getStatus());
+    }
+
+    @Test
+    void testMongoInsert() {
+
+        ShortlyKey key = ShortlyKey.builder()
+                .key("TEST123")
+                .status(StatusType.AVAILABLE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        shortlyKeyRepository.save(key);
+
+        System.out.println("SAVED!");
+
+        ShortlyKey result = shortlyKeyRepository.findByKey("TEST123").orElseThrow();
+
+        System.out.println(result);
     }
 }

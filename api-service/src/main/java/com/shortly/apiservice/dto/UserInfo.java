@@ -1,5 +1,6 @@
 package com.shortly.apiservice.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.shortly.apiservice.entity.Role;
 import com.shortly.apiservice.entity.User;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.UUID;
 
 @Slf4j
 @Builder
@@ -21,24 +23,25 @@ import java.util.Collections;
 @NoArgsConstructor
 public class UserInfo implements UserDetails {
 
-    private User user;
-    private Role role;
+    private UUID id;
+    private String email;
+    private String password;
+    private String role;
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(role.getName().name()));
+        return Collections.singleton(new SimpleGrantedAuthority(role));
     }
 
     @Override
     public String getPassword() {
-        log.info("Password : " +user.getPassword());
-        return user.getPassword();
+        return password;
     }
 
     @Override
     public String getUsername() {
-        log.info("Email : " + user.getEmail());
-        return user.getEmail();
+        return email;
     }
 
     @Override

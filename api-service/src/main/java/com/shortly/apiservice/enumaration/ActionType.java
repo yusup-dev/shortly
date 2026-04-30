@@ -1,6 +1,6 @@
 package com.shortly.apiservice.enumaration;
 
-public enum AuditActionType {
+public enum ActionType {
     LOGIN,
     LOGIN_FAILED,
     CREATE_SHORT_URL,

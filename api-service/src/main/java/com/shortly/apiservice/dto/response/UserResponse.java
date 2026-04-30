@@ -26,8 +26,6 @@ public class UserResponse {
     private RoleType role;
     private PlanType plan;
     private String apiKey;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
 
     public static UserResponse from(User user, String apiKey) {
         if (user == null) {
@@ -42,8 +40,6 @@ public class UserResponse {
                 .apiKey(apiKey)
                 .plan(user.getPlan().getName())
                 .role(user.getRole().getName())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
                 .build();
     }
 }

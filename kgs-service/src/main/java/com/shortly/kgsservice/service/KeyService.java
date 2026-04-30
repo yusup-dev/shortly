@@ -21,35 +21,71 @@ public class KeyService {
 
     public String getKey() {
 
-        // 1. Check queue length
-        Long queueLen = redisTemplate.opsForList().size(Constant.REDIS_QUEUE_NAME);
+        int retry = 0;
 
-        if (queueLen != null && queueLen < Constant.QUEUE_LENGTH) {
-            log.info("Queue length is low, generating more keys");
-            generatorService.generateKeys(Constant.KEY_COUNT);
+        while (retry < 3) {
+
+            Long queueLen = redisTemplate.opsForList()
+                    .size(Constant.REDIS_QUEUE_NAME);
+
+            log.info("Queue size: {}", queueLen);
+
+            // =========================
+            // 1. GENERATE IF LOW
+            // =========================
+            if (queueLen == null || queueLen < Constant.QUEUE_LENGTH) {
+                log.info("Queue is low or empty, generating keys...");
+                generatorService.generateKeys(Constant.KEY_COUNT);
+            }
+
+            // =========================
+            // 2. POP FROM REDIS
+            // =========================
+            String keyVal = redisTemplate.opsForList()
+                    .rightPop(Constant.REDIS_QUEUE_NAME);
+
+            if (keyVal == null) {
+                log.warn("No key in Redis, regenerating...");
+                generatorService.generateKeys(Constant.KEY_COUNT);
+                retry++;
+                continue;
+            }
+
+            // =========================
+            // 3. CHECK IN MONGO
+            // =========================
+            Optional<ShortlyKey> optionalKey =
+                    shortlyKeyRepository.findByKey(keyVal);
+
+            if (optionalKey.isEmpty()) {
+
+                log.error("Key {} exists in Redis but NOT in Mongo!", keyVal);
+
+                // ⚠️ jangan balikin ke Redis (biar tidak loop terus)
+                // regenerate instead
+                generatorService.generateKeys(Constant.KEY_COUNT);
+
+                retry++;
+                continue;
+            }
+
+            // =========================
+            // 4. MARK AS USED
+            // =========================
+            ShortlyKey shortlyKey = optionalKey.get();
+            shortlyKey.setStatus(StatusType.USED);
+            ShortlyKey save = shortlyKeyRepository.save(shortlyKey);
+
+
+            log.info("Key {} marked as USED", keyVal);
+            log.info("Save {} mark", save);
+
+            return keyVal;
         }
 
-        // 2. Pop key from Redis (RPOP)
-        String keyVal = redisTemplate.opsForList().rightPop(Constant.REDIS_QUEUE_NAME);
-
-        if( keyVal == null) {
-            throw new RuntimeException("No key available in Redis");
-        }
-
-        // 3. Update MongoDB status -> USED
-        Optional<ShortlyKey> optionalKey = shortlyKeyRepository.findByKey(keyVal);
-
-        if(optionalKey.isEmpty()) {
-            redisTemplate.opsForList().leftPush(Constant.REDIS_QUEUE_NAME, keyVal);
-            throw new RuntimeException("Key not found in DB, rollback to Redis");
-        }
-
-        ShortlyKey shortlyKey = optionalKey.get();
-        shortlyKey.setStatus(StatusType.USED);
-        shortlyKeyRepository.save(shortlyKey);
-
-        log.info("Key status updated in database");
-
-        return keyVal;
+        // =========================
+        // 5. FAIL SAFE
+        // =========================
+        throw new RuntimeException("Failed to get valid key after retries");
     }
  }

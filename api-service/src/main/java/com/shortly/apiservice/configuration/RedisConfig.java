@@ -27,17 +27,38 @@ public class RedisConfig {
 
     @Bean
     public RedisConnectionFactory redisConnectionFactory() {
-        RedisStandaloneConfiguration configuration = new RedisStandaloneConfiguration(redisHost, redisPort);
-        return new LettuceConnectionFactory(configuration);
+        RedisStandaloneConfiguration config =
+                new RedisStandaloneConfiguration(redisHost, redisPort);
+
+        return new LettuceConnectionFactory(config);
     }
 
     @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-        redisTemplate.setKeySerializer(new StringRedisSerializer());
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        return redisTemplate;
+    public RedisTemplate<String, Object> redisTemplate(
+            RedisConnectionFactory redisConnectionFactory
+    ) {
+
+        RedisTemplate<String, Object> template = new RedisTemplate<>();
+        template.setConnectionFactory(redisConnectionFactory);
+
+        ObjectMapper mapper = objectMapper.copy();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+        GenericJackson2JsonRedisSerializer serializer =
+                new GenericJackson2JsonRedisSerializer(mapper);
+
+        // KEY
+        template.setKeySerializer(new StringRedisSerializer());
+
+        // VALUE
+        template.setValueSerializer(serializer);
+
+        // HASH
+        template.setHashKeySerializer(new StringRedisSerializer());
+        template.setHashValueSerializer(serializer);
+
+        template.afterPropertiesSet();
+
+        return template;
     }
 }

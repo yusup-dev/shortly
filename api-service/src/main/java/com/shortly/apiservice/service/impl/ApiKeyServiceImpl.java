@@ -70,8 +70,6 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .build();
     }
 
-
-
     private GeneratedKey generateKey() {
         String raw = ApiKeyGenerator.generateApiKey();
         String hash = ApiKeyHashUtil.hash(raw);
@@ -83,7 +81,7 @@ public class ApiKeyServiceImpl implements ApiKeyService {
                 .id(UUID.randomUUID())
                 .user(user)
                 .keyHash(hash)
-                .expiresAt(null)
+                .expiresAt(LocalDateTime.now().plusDays(7))
                 .status(KeyStatusType.ACTIVE)
                 .createdAt(LocalDateTime.now())
                 .build();

@@ -13,16 +13,14 @@ import java.util.UUID;
 @Builder
 public class LoginResponse {
     private UUID id;
-    private String name;
     private String email;
-    private RoleType role;
+    private String role;
 
     public static LoginResponse from(UserInfo userInfo) {
         return LoginResponse.builder()
-                .id(userInfo.getUser().getId())
-                .name(userInfo.getUser().getName())
+                .id(userInfo.getId())
                 .email(userInfo.getUsername())
-                .role(userInfo.getRole().getName())
+                .role(userInfo.getRole())
                 .build();
     }
 }

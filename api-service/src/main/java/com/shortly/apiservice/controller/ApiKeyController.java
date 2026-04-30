@@ -21,7 +21,7 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api-key")
+@RequestMapping("/api-keys")
 @RequiredArgsConstructor
 @Tag(name = "Api Key Controller")
 public class ApiKeyController {

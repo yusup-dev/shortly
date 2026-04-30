@@ -1,6 +1,6 @@
 package com.shortly.apiservice.enumaration;
 
-public enum AuditTargetType {
+public enum TargetType {
     USER,
     ROLE,
     API_KEY,
