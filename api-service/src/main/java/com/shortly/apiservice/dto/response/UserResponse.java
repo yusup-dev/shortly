@@ -1,45 +1,28 @@
 package com.shortly.apiservice.dto.response;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.shortly.apiservice.entity.User;
-import com.shortly.apiservice.enumaration.PlanType;
-import com.shortly.apiservice.enumaration.RoleType;
-import com.shortly.apiservice.enumaration.StatusType;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
 @Builder
-@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserResponse {
-
     private UUID id;
     private String name;
     private String email;
-    private StatusType status;
-    private RoleType role;
-    private PlanType plan;
-    private String apiKey;
+    private String role;
+    private String plan;
 
-    public static UserResponse from(User user, String apiKey) {
-        if (user == null) {
-            return null;
-        }
-
+    public static UserResponse from(User user) {
         return UserResponse.builder()
                 .id(user.getId())
                 .name(user.getName())
                 .email(user.getEmail())
-                .status(user.getStatus())
-                .apiKey(apiKey)
-                .plan(user.getPlan().getName())
-                .role(user.getRole().getName())
+                .role(String.valueOf(user.getRole().getName()))
+                .plan(String.valueOf(user.getPlan().getName()))
                 .build();
     }
 }

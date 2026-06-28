@@ -1,9 +1,9 @@
 package com.shortly.apiservice.service.impl;
 
+import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.response.ApiKeyPlanCache;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
-import com.shortly.apiservice.repository.ApiKeyRepository;
 import com.shortly.apiservice.service.PlanService;
 import com.shortly.apiservice.service.RateLimitService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,6 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 public class RateLimitServiceImpl implements RateLimitService {
 
-    private final ApiKeyRepository apiKeyRepository;
     private final RedisTemplate<String, Object> redisTemplate;
     private final PlanService planService;
 
@@ -67,6 +66,6 @@ public class RateLimitServiceImpl implements RateLimitService {
     }
 
     private String buildKey(String apiKey) {
-        return "rate_limit:" + apiKey + ":" + LocalDate.now();
+        return CacheConstants.CACHE_RATE_LIMIT + apiKey + ":" + LocalDate.now();
     }
 }

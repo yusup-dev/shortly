@@ -3,14 +3,13 @@ package com.shortly.apiservice.controller;
 import com.shortly.apiservice.dto.UserInfo;
 import com.shortly.apiservice.dto.request.AuthRequest;
 import com.shortly.apiservice.dto.request.UserRegisterRequest;
-import com.shortly.apiservice.dto.response.ApiResponse;
-import com.shortly.apiservice.dto.response.AuthResponse;
-import com.shortly.apiservice.dto.response.TokenResponse;
-import com.shortly.apiservice.dto.response.UserResponse;
+import com.shortly.apiservice.dto.response.*;
+import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.AuthService;
 import com.shortly.apiservice.service.JwtService;
+import com.shortly.apiservice.service.RefreshTokenService;
 import com.shortly.apiservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -18,14 +17,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Tag(name = "Auth Controller")
 public class AuthController {
@@ -33,6 +30,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final AuthService authService;
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
@@ -41,11 +39,12 @@ public class AuthController {
         try {
             UserInfo userInfo = authService.authenticate(authRequest);
             TokenResponse tokenResponse = jwtService.generateToken(userInfo);
+            String refreshToken = refreshTokenService.createRefreshToken(userInfo);
             return ResponseEntity.status(HttpStatus.OK).body(
                     ApiResponse.<AuthResponse>builder()
                             .success(true)
                             .message("Login successfully!")
-                            .data(AuthResponse.from(userInfo, tokenResponse))
+                            .data(AuthResponse.from(userInfo, tokenResponse, refreshToken))
                             .build()
             );
         } catch (Exception e) {
@@ -55,16 +54,16 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserResponse>> login(
+    public ResponseEntity<ApiResponse<UserRegisterResponse>> login(
             @Valid @RequestBody UserRegisterRequest userRegisterRequest
             ) {
         try {
-            UserResponse response = userService.register(userRegisterRequest);
+            UserRegisterResponse data = userService.register(userRegisterRequest);
             return ResponseEntity.status(HttpStatus.OK).body(
-                    ApiResponse.<UserResponse>builder()
+                    ApiResponse.<UserRegisterResponse>builder()
                             .success(true)
                             .message("Register successfully!")
-                            .data(response)
+                            .data(data)
                             .build()
             );
         } catch (Exception e) {
@@ -73,4 +72,41 @@ public class AuthController {
         }
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
+        try {
+          return ResponseEntity.status(HttpStatus.OK)
+                    .body(refreshTokenService.refresh(body.get("refreshToken")));
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApplicationException(ExceptionType.UNAUTHORIZED, e.getMessage());
+        }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestBody Map<String, String> body) {
+        refreshTokenService.deleteToken(body.get("refreshToken"));
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> me() {
+        try {
+            User currentUser = userService.getCurrentUser();
+
+            return ResponseEntity.ok(
+                    ApiResponse.<UserResponse>builder()
+                            .success(true)
+                            .message("User profile retrieved successfully!")
+                            .data(UserResponse.from(currentUser))
+                            .build()
+            );
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new ApplicationException(
+                    ExceptionType.UNAUTHORIZED,
+                    e.getMessage()
+            );
+        }
+    }
 }

@@ -13,7 +13,8 @@ public enum ExceptionType {
     INVALID_PASSWORD("Current password is incorrect", 401),
     FORBIDDEN("Access denied", 403),
     INTERNAL_SERVER_ERROR("Internal server error", 500),
-    TOO_MANY_REQUEST("Rate limit extended", 400);
+    TOO_MANY_REQUEST("Rate limit extended", 400),
+    UNAUTHORIZED("Unauthorized access", 401);
 
     private final String message;
     private final int httpCode;

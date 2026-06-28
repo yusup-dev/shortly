@@ -1,5 +1,7 @@
 package com.shortly.apiservice.configuration;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shortly.apiservice.dto.response.ErrorResponse;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.RateLimitService;
@@ -10,65 +12,97 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitService rateLimitService;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
 
-        return path.startsWith("/api/auth") ||
-                path.startsWith("/api/v3/api-docs") ||
-                path.startsWith("/api/swagger-ui") ||
-                path.startsWith("/api/swagger-ui.html") ||
-                path.startsWith("/api/webjars"); // redirect
+        String path = request.getRequestURI();
+        String method = request.getMethod();
+
+        boolean protectedEndpoint =
+                "POST".equalsIgnoreCase(method)
+                        && (
+                        "/api/urls".equals(path)
+                                || "/api/urls/bulk".equals(path)
+                );
+
+        return !protectedEndpoint;
     }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        // =========================
-        // GET API KEY
-        // =========================
         String rawApiKey = request.getHeader("X-API-KEY");
 
         if (rawApiKey == null || rawApiKey.isBlank()) {
-            response.setStatus(HttpStatus.BAD_REQUEST.value());
-            response.getWriter().write("Missing API KEY");
+
+            writeErrorResponse(
+                    response,
+                    HttpStatus.BAD_REQUEST,
+                    "Missing API KEY"
+            );
+
             return;
         }
 
         String hashedKey = ApiKeyHashUtil.hash(rawApiKey);
 
         try {
-            // =========================
-            // RATE LIMIT
-            // =========================
+
             rateLimitService.checkRateLimit(hashedKey);
+
+            filterChain.doFilter(request, response);
 
         } catch (ApplicationException ex) {
 
-            if (ex.getType() == ExceptionType.TOO_MANY_REQUEST) {
-                response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-                response.getWriter().write("Too many requests");
-            } else {
-                response.setStatus(HttpStatus.BAD_REQUEST.value());
-                response.getWriter().write(ex.getMessage());
-            }
-            return;
-        }
+            HttpStatus status =
+                    ex.getType() == ExceptionType.TOO_MANY_REQUEST
+                            ? HttpStatus.TOO_MANY_REQUESTS
+                            : HttpStatus.BAD_REQUEST;
 
-        filterChain.doFilter(request, response);
+            writeErrorResponse(
+                    response,
+                    status,
+                    ex.getMessage()
+            );
+        }
+    }
+
+    private void writeErrorResponse(
+            HttpServletResponse response,
+            HttpStatus status,
+            String message
+    ) throws IOException {
+
+        response.setStatus(status.value());
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .code(status.value())
+                .message(message)
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        objectMapper.writeValue(
+                response.getWriter(),
+                errorResponse
+        );
     }
 }

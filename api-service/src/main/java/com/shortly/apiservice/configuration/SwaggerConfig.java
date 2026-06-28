@@ -31,7 +31,7 @@ public class SwaggerConfig {
                         .title("SHORTLY API")
                         .version("1.0"))
                 .servers(List.of(
-                        new Server().url("http://localhost:8080/api").description("Localhost Server")
+                        new Server().url("http://localhost:8080").description("Localhost Server")
                 ));
     }
 }

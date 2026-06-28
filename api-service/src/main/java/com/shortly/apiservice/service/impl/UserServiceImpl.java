@@ -1,7 +1,7 @@
 package com.shortly.apiservice.service.impl;
 
 import com.shortly.apiservice.dto.request.UserRegisterRequest;
-import com.shortly.apiservice.dto.response.UserResponse;
+import com.shortly.apiservice.dto.response.UserRegisterResponse;
 import com.shortly.apiservice.entity.Plan;
 import com.shortly.apiservice.entity.Role;
 import com.shortly.apiservice.entity.User;
@@ -17,6 +17,7 @@ import com.shortly.apiservice.service.ApiKeyService;
 import com.shortly.apiservice.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
     private final PlanRepository planRepository;
 
     @Override @Transactional
-    public UserResponse register(UserRegisterRequest userRegisterRequest) {
+    public UserRegisterResponse register(UserRegisterRequest userRegisterRequest) {
         if(existsByEmail(userRegisterRequest.getEmail())) {
             throw new ApplicationException(ExceptionType.EMAIL_ALREADY_EXISTS);
         }
@@ -67,11 +68,18 @@ public class UserServiceImpl implements UserService {
 
         String apiKey = apiKeyService.createApiKey(saved.getId());
 
-        return UserResponse.from(saved, apiKey);
+        return UserRegisterResponse.from(saved, apiKey);
     }
 
     @Override
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Override
+    public User getCurrentUser() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new ApplicationException(ExceptionType.RESOURCE_NOT_FOUND, "User not found!"));
     }
 }

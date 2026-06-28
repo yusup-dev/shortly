@@ -1,6 +1,6 @@
-<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.6.1 Chrome/142.0.7444.265 Electron/39.8.0 Safari/537.36" version="29.6.1">
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.5.2 Chrome/142.0.7444.265 Electron/39.6.1 Safari/537.36" version="29.5.2">
   <diagram name="Page-1" id="57TdvI2mCIzIYIZA5P_F">
-    <mxGraphModel dx="1389" dy="835" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
+    <mxGraphModel dx="1303" dy="783" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="850" background="none" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -665,25 +665,28 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="x2MrpDqz7Sly4cZlyiFC-155" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=0;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;strokeColor=none;fillColor=none;" value="" vertex="1">
-          <mxGeometry height="150" width="150" x="2130" y="700" as="geometry" />
+          <mxGeometry height="180" width="150" x="1050" y="800" as="geometry" />
         </mxCell>
         <mxCell id="x2MrpDqz7Sly4cZlyiFC-157" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="ACTIVE (200)" vertex="1">
           <mxGeometry height="30" width="150" as="geometry" />
         </mxCell>
-        <mxCell id="x2MrpDqz7Sly4cZlyiFC-158" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="INACTIVE (403)" vertex="1">
+        <mxCell id="x2MrpDqz7Sly4cZlyiFC-156" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#F7F7F7;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;shape=mxgraph.bootstrap.topButton;rSize=5;fontColor=#333333;" value="STATUS (api&amp;nbsp; keys)" vertex="1">
           <mxGeometry height="30" width="150" y="30" as="geometry" />
         </mxCell>
-        <mxCell id="x2MrpDqz7Sly4cZlyiFC-163" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="REVOKED (401)" vertex="1">
+        <mxCell id="x2MrpDqz7Sly4cZlyiFC-158" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="INACTIVE (403)" vertex="1">
           <mxGeometry height="30" width="150" y="60" as="geometry" />
         </mxCell>
-        <mxCell id="x2MrpDqz7Sly4cZlyiFC-162" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="EXPIRED (401)" vertex="1">
+        <mxCell id="x2MrpDqz7Sly4cZlyiFC-163" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="REVOKED (401)" vertex="1">
           <mxGeometry height="30" width="150" y="90" as="geometry" />
         </mxCell>
-        <mxCell id="x2MrpDqz7Sly4cZlyiFC-159" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;shape=mxgraph.bootstrap.bottomButton;rSize=5;fontColor=#333333;" value="SUSPENDED (403)" vertex="1">
+        <mxCell id="x2MrpDqz7Sly4cZlyiFC-162" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;rSize=5;fontColor=#333333;" value="EXPIRED (401)" vertex="1">
           <mxGeometry height="30" width="150" y="120" as="geometry" />
         </mxCell>
+        <mxCell id="x2MrpDqz7Sly4cZlyiFC-159" parent="x2MrpDqz7Sly4cZlyiFC-155" style="text;strokeColor=#DFDFDF;fillColor=#FFFFFF;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;shape=mxgraph.bootstrap.bottomButton;rSize=5;fontColor=#333333;" value="SUSPENDED (403)" vertex="1">
+          <mxGeometry height="30" width="150" y="150" as="geometry" />
+        </mxCell>
         <mxCell id="x2MrpDqz7Sly4cZlyiFC-164" parent="1" style="shape=note;whiteSpace=wrap;html=1;backgroundOutline=1;darkOpacity=0.05;align=left;" value="REVOKED : Key di cabut permanent&lt;div&gt;SUSPENDED : diblock oleh sistem/ admin&lt;span style=&quot;background-color: transparent; color: light-dark(rgb(0, 0, 0), rgb(255, 255, 255));&quot;&gt;&amp;nbsp;&lt;/span&gt;&lt;/div&gt;" vertex="1">
-          <mxGeometry height="90" width="170" x="2310" y="690" as="geometry" />
+          <mxGeometry height="90" width="170" x="1550" y="710" as="geometry" />
         </mxCell>
         <mxCell id="x2MrpDqz7Sly4cZlyiFC-165" parent="1" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=0;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=0;marginBottom=0;whiteSpace=wrap;html=1;strokeColor=none;fillColor=none;" value="" vertex="1">
           <mxGeometry height="150" width="160" x="1840" y="670" as="geometry" />
@@ -1128,9 +1131,6 @@
           <mxGeometry height="30" width="180" x="30" as="geometry">
             <mxRectangle height="30" width="180" as="alternateBounds" />
           </mxGeometry>
-        </mxCell>
-        <mxCell id="x2MrpDqz7Sly4cZlyiFC-156" parent="1" style="text;strokeColor=#DFDFDF;fillColor=#F7F7F7;align=left;verticalAlign=middle;spacingLeft=10;spacingRight=10;overflow=hidden;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;rotatable=0;whiteSpace=wrap;html=1;shape=mxgraph.bootstrap.topButton;rSize=5;fontColor=#333333;" value="STATUS (api&amp;nbsp; keys)" vertex="1">
-          <mxGeometry height="30" width="150" x="2130" y="670" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

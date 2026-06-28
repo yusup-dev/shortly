@@ -1,6 +1,7 @@
 package com.shortly.apiservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.shortly.apiservice.entity.Role;
 import com.shortly.apiservice.entity.User;
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UserInfo implements UserDetails {
 
     private UUID id;
@@ -29,9 +31,10 @@ public class UserInfo implements UserDetails {
     private String role;
 
     @Override
-    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singleton(new SimpleGrantedAuthority(role));
+        return Collections.singleton(
+                new SimpleGrantedAuthority("ROLE_" + role)
+        );
     }
 
     @Override

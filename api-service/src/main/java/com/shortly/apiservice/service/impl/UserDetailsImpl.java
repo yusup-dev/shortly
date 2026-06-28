@@ -1,5 +1,6 @@
 package com.shortly.apiservice.service.impl;
 
+import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.UserInfo;
 import com.shortly.apiservice.entity.Role;
 import com.shortly.apiservice.entity.User;
@@ -28,7 +29,7 @@ public class UserDetailsImpl implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        String cacheKey = "auth:user:" + email;
+        String cacheKey = CacheConstants.CACHE_AUTH + email;
 
         Optional<UserInfo> cached = cacheService.get(cacheKey, UserInfo.class);
         if (cached.isPresent()) {

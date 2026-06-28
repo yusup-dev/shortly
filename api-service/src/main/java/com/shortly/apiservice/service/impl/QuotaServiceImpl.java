@@ -1,9 +1,9 @@
 package com.shortly.apiservice.service.impl;
 
+import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.response.ApiKeyPlanCache;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
-import com.shortly.apiservice.repository.ApiKeyRepository;
 import com.shortly.apiservice.repository.UrlRepository;
 import com.shortly.apiservice.service.PlanService;
 import com.shortly.apiservice.service.QuotaService;
@@ -11,6 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
@@ -32,11 +34,12 @@ public class QuotaServiceImpl implements QuotaService {
         String redisKey = buildKey(apiKey);
 
         // 2. GET COUNTER
-        Object value = redisTemplate.opsForValue().get(redisKey);
-
         Long count = null;
-        if (value != null) {
-            count = ((Number) value).longValue();
+
+        Object cachedCount = redisTemplate.opsForValue().get(redisKey);
+
+        if (cachedCount instanceof Number number) {
+            count = number.longValue();
         }
         // ===================
         // 3. FALLBACK KE DB (ONLY ONCE)
@@ -44,7 +47,11 @@ public class QuotaServiceImpl implements QuotaService {
         if (count == null) {
             count = urlRepository.countByApiKeyHash(apiKey);
 
-            redisTemplate.opsForValue().set(redisKey, count);
+            redisTemplate.opsForValue().set(
+                    redisKey,
+                    count,
+                    Duration.ofHours(1)
+            );
         }
 
         // ===================
@@ -73,10 +80,14 @@ public class QuotaServiceImpl implements QuotaService {
     @Override
     public void decrementQuota(String apiKey) {
         String redisKey = buildKey(apiKey);
-        redisTemplate.opsForValue().decrement(redisKey);
+        Long count = redisTemplate.opsForValue().decrement(redisKey);
+
+        if(count != null && count < 0) {
+            redisTemplate.opsForValue().set(redisKey, 0);
+        }
     }
 
     private String buildKey(String apiKey) {
-        return "quota:" + apiKey;
+        return CacheConstants.CACHE_QUOTA + apiKey;
     }
 }

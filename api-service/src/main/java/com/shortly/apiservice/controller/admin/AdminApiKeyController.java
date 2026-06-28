@@ -1,16 +1,11 @@
-package com.shortly.apiservice.controller;
+package com.shortly.apiservice.controller.admin;
 
-import com.shortly.apiservice.dto.UserInfo;
-import com.shortly.apiservice.dto.request.AuthRequest;
 import com.shortly.apiservice.dto.response.ApiKeyResponse;
 import com.shortly.apiservice.dto.response.ApiResponse;
-import com.shortly.apiservice.dto.response.AuthResponse;
-import com.shortly.apiservice.dto.response.TokenResponse;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.ApiKeyService;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,10 +16,10 @@ import java.util.UUID;
 
 @Slf4j
 @RestController
-@RequestMapping("/api-keys")
+@RequestMapping("/api/admin/api-keys")
 @RequiredArgsConstructor
 @Tag(name = "Api Key Controller")
-public class ApiKeyController {
+public class AdminApiKeyController {
 
     private final ApiKeyService apiKeyService;
 

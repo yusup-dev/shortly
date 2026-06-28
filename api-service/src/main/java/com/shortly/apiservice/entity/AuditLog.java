@@ -1,7 +1,6 @@
 package com.shortly.apiservice.entity;
 
 import com.shortly.apiservice.enumaration.ActionType;
-import com.shortly.apiservice.enumaration.ActorType;
 import com.shortly.apiservice.enumaration.RoleType;
 import com.shortly.apiservice.enumaration.TargetType;
 import jakarta.persistence.*;

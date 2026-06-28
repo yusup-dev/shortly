@@ -3,16 +3,12 @@ package com.shortly.apiservice.service.impl;
 import com.shortly.apiservice.entity.AuditLog;
 import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.ActionType;
-import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.enumaration.TargetType;
-import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.repository.AuditLogRepository;
-import com.shortly.apiservice.repository.UserRepository;
 import com.shortly.apiservice.service.AuditLogService;
+import com.shortly.apiservice.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -21,8 +17,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuditLogServiceImpl implements AuditLogService {
 
-    private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
+    private final UserService userService;
 
     @Override
     public String getClientIpAddress(HttpServletRequest servletRequest) {
@@ -39,7 +35,7 @@ public class AuditLogServiceImpl implements AuditLogService {
                              TargetType targetType,
                              UUID targetId) {
 
-        User currentUser = getCurrentUser();
+        User currentUser = userService.getCurrentUser();
         String ipAddress = getClientIpAddress(servletRequest);
 
         AuditLog auditLog = AuditLog.builder()
@@ -51,14 +47,6 @@ public class AuditLogServiceImpl implements AuditLogService {
                 .ipAddress(ipAddress)
                 .build();
 
-
         auditLogRepository.save(auditLog);
-    }
-
-    @Override
-    public User getCurrentUser() {
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new ApplicationException(ExceptionType.RESOURCE_NOT_FOUND, "User not found!"));
     }
 }

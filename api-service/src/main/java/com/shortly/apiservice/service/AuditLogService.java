@@ -13,5 +13,4 @@ public interface AuditLogService {
                       ActionType actionType,
                       TargetType targetType,
                       UUID target_id);
-    User getCurrentUser();
 }
