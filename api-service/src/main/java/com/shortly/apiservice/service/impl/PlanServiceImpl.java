@@ -38,7 +38,7 @@ public class PlanServiceImpl implements PlanService {
                     // ===================
                     ApiKeyPlanProjection data = apiKeyRepository.findLimitByApiKey(apiKey)
                             .orElseThrow(() -> new ApplicationException(
-                                    ExceptionType.BAD_REQUEST, "Invalid API key"
+                                    ExceptionType.INVALID_API_KEY
                             ));
 
                     // ===================
@@ -47,6 +47,7 @@ public class PlanServiceImpl implements PlanService {
                     ApiKeyPlanCache cache = ApiKeyPlanCache.builder()
                             .maxRequestsPerDay(data.getMaxRequestsPerDay())
                             .maxUrlsPerKey(data.getMaxUrlsPerKey())
+                            .maxBulk(data.getMaxBulk())
                             .build();
 
                     // ===================

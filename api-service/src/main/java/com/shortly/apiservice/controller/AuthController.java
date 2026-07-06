@@ -1,5 +1,6 @@
 package com.shortly.apiservice.controller;
 
+import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.UserInfo;
 import com.shortly.apiservice.dto.request.AuthRequest;
 import com.shortly.apiservice.dto.request.UserRegisterRequest;
@@ -8,21 +9,26 @@ import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.ExceptionType;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.AuthService;
+import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.JwtService;
 import com.shortly.apiservice.service.RefreshTokenService;
 import com.shortly.apiservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Duration;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 @Tag(name = "Auth Controller")
 public class AuthController {
@@ -31,6 +37,7 @@ public class AuthController {
     private final AuthService authService;
     private final UserService userService;
     private final RefreshTokenService refreshTokenService;
+    private final CacheService cacheService;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
@@ -84,9 +91,39 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(@RequestBody Map<String, String> body) {
-        refreshTokenService.deleteToken(body.get("refreshToken"));
+    public ResponseEntity<?> logout(
+            @RequestBody(required = false) Map<String, String> body,
+            HttpServletRequest request
+    ) {
+        blacklistAccessToken(request);
+
+        if (body != null && body.get("refreshToken") != null) {
+            refreshTokenService.deleteToken(body.get("refreshToken"));
+        }
+
         return ResponseEntity.noContent().build();
+    }
+
+    private void blacklistAccessToken(HttpServletRequest request) {
+        String bearer = request.getHeader("Authorization");
+        if (bearer == null || !bearer.startsWith("Bearer ")) {
+            return;
+        }
+
+        String accessToken = bearer.substring(7);
+        try {
+            Date expiration = jwtService.getExpiration(accessToken);
+            long remainingMs = expiration.getTime() - System.currentTimeMillis();
+            if (remainingMs > 0) {
+                cacheService.put(
+                        CacheConstants.CACHE_TOKEN_BLACKLIST + accessToken,
+                        "true",
+                        Duration.ofMillis(remainingMs)
+                );
+            }
+        } catch (Exception e) {
+            log.warn("Failed to blacklist access token on logout: {}", e.getMessage());
+        }
     }
 
     @GetMapping("/me")

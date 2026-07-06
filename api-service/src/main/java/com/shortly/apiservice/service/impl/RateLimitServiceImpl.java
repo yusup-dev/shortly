@@ -60,9 +60,26 @@ public class RateLimitServiceImpl implements RateLimitService {
         // ===================
         if(count != null && count > maxRequests) {
             throw new ApplicationException(
-                    ExceptionType.TOO_MANY_REQUEST
+                    ExceptionType.RATE_LIMIT_EXCEEDED
             );
         }
+    }
+
+    @Override
+    public RateLimitStatus getStatus(String apiKey) {
+        ApiKeyPlanCache plan = planService.getPlan(apiKey);
+        int maxRequests = plan.getMaxRequestsPerDay();
+
+        String redisKey = buildKey(apiKey);
+        Object cached = redisTemplate.opsForValue().get(redisKey);
+        long used = (cached instanceof Number number) ? number.longValue() : 0L;
+
+        long remaining = Math.max(0, maxRequests - used);
+        long resetEpochSeconds = LocalDate.now().plusDays(1)
+                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .toEpochSecond();
+
+        return new RateLimitService.RateLimitStatus(maxRequests, remaining, resetEpochSeconds);
     }
 
     private String buildKey(String apiKey) {

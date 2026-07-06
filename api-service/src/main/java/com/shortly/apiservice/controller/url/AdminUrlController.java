@@ -1,8 +1,8 @@
-package com.shortly.apiservice.controller.user;
+package com.shortly.apiservice.controller.url;
 
-import com.shortly.apiservice.dto.request.UpdateUrlRequest;
-import com.shortly.apiservice.dto.request.UrlRequest;
 import com.shortly.apiservice.dto.request.SearchUrlRequest;
+import com.shortly.apiservice.dto.request.UpdateStatusRequest;
+import com.shortly.apiservice.dto.request.UpdateUrlRequest;
 import com.shortly.apiservice.dto.response.ApiResponse;
 import com.shortly.apiservice.dto.response.PaginationResponse;
 import com.shortly.apiservice.dto.response.UrlResponse;
@@ -13,44 +13,29 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
 
 @Slf4j
-@RestController
 @RequiredArgsConstructor
-@Tag(name = "Url Controller")
-@RequestMapping("/api/urls")
-public class UrlController {
+@RestController
+@Tag(name = "Admin Url Controller")
+@RequestMapping("/api/v1/admin/urls")
+@PreAuthorize("hasRole('ADMIN')")
+public class AdminUrlController {
 
     private final UrlService urlService;
-
-    @PostMapping
-    public ResponseEntity<ApiResponse<UrlResponse>> createUrl(
-            @RequestBody UrlRequest urlRequest,
-            @RequestHeader("X-API-KEY") String apiKey,
-            HttpServletRequest request
-    ) {
-        UrlResponse data = urlService.createUrl(urlRequest, apiKey, request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.<UrlResponse>builder()
-                        .success(true)
-                        .message("Create short url successfully!")
-                        .data(data)
-                        .build()
-        );
-    }
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<UrlResponse>>> findAll(
             @ParameterObject
             @ModelAttribute SearchUrlRequest request
     ) {
-        Page<UrlResponse> page = urlService.findAll(request);
+        Page<UrlResponse> page = urlService.findAllForAdmin(request);
         return ResponseEntity.ok(
                 ApiResponse.<List<UrlResponse>>builder()
                         .success(true)
@@ -64,8 +49,8 @@ public class UrlController {
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<UrlResponse>> findOne(
             @PathVariable UUID id
-            ) {
-        UrlResponse data = urlService.findOne(id);
+    ) {
+        UrlResponse data = urlService.findOneForAdmin(id);
         return ResponseEntity.ok(
                 ApiResponse.<UrlResponse>builder()
                         .success(true)
@@ -82,7 +67,7 @@ public class UrlController {
             HttpServletRequest request
 
     ) {
-        UrlResponse data = urlService.update(id, updateUrlRequest, request);
+        UrlResponse data = urlService.updateForAdmin(id, updateUrlRequest, request);
         return ResponseEntity.ok(
                 ApiResponse.<UrlResponse>builder()
                         .success(true)
@@ -97,11 +82,28 @@ public class UrlController {
             @PathVariable UUID id,
             HttpServletRequest request
     ){
-        urlService.delete(id, request);
+        urlService.deleteForAdmin(id, request);
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
                         .message("Url deleted successfully")
+                        .build()
+        );
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<ApiResponse<UrlResponse>> updateStatus(
+            @PathVariable UUID id,
+            @RequestBody UpdateStatusRequest updateStatusRequest,
+            HttpServletRequest request
+    ) {
+        UrlResponse data = urlService.updateStatusForAdmin(
+                id, updateStatusRequest.getStatus(), updateStatusRequest.getReason(), request);
+        return ResponseEntity.ok(
+                ApiResponse.<UrlResponse>builder()
+                        .success(true)
+                        .message("Url status updated successfully")
+                        .data(data)
                         .build()
         );
     }

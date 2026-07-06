@@ -7,4 +7,9 @@ public final class CacheConstants {
     public static final String CACHE_AUTH = "auth:user:";
     public static final String CACHE_QUOTA = "quota:";
     public static final String CACHE_URL = "url:";
+    public static final String CACHE_TOKEN_BLACKLIST = "token_blacklist:";
+    public static final String CACHE_QR = "qr:";
+    public static final String CACHE_ANALYTICS_TOTAL = "analytics:clicks:total:";
+    public static final String CACHE_ANALYTICS_HLL = "analytics:hll:";
+    public static final String CACHE_ANALYTICS_HLL_GLOBAL = "analytics:hll:global:";
 }

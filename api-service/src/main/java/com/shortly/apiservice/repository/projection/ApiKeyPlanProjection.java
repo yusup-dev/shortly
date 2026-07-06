@@ -4,4 +4,5 @@ public interface ApiKeyPlanProjection {
     String getKeyHash();
     Integer getMaxRequestsPerDay();
     Integer getMaxUrlsPerKey();
+    Integer getMaxBulk();
 }

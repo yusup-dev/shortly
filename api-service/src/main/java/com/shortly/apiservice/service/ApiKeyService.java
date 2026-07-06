@@ -1,14 +1,17 @@
 package com.shortly.apiservice.service;
 
+import com.shortly.apiservice.dto.response.ApiKeyListResponse;
 import com.shortly.apiservice.dto.response.ApiKeyResponse;
-import com.shortly.apiservice.entity.ApiKey;
-import com.shortly.apiservice.entity.User;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface ApiKeyService {
 
     String createApiKey(UUID userId);
     ApiKeyResponse updateApiKey(UUID apiKey);
-    void revokeApiKey(UUID apoKey);
+    void revokeApiKey(UUID apiKey);
+
+    List<ApiKeyListResponse> listByUser(UUID userId);
+    void revokeOwnApiKey(UUID apiKeyId, UUID userId);
 }

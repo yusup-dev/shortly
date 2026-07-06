@@ -35,8 +35,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         boolean protectedEndpoint =
                 "POST".equalsIgnoreCase(method)
                         && (
-                        "/api/urls".equals(path)
-                                || "/api/urls/bulk".equals(path)
+                        "/api/v1/urls".equals(path)
+                                || "/api/v1/urls/bulk".equals(path)
                 );
 
         return !protectedEndpoint;
@@ -56,6 +56,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
             writeErrorResponse(
                     response,
                     HttpStatus.BAD_REQUEST,
+                    "MISSING_API_KEY",
                     "Missing API KEY"
             );
 
@@ -68,26 +69,43 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
             rateLimitService.checkRateLimit(hashedKey);
 
+            addRateLimitHeaders(response, hashedKey);
+
             filterChain.doFilter(request, response);
 
         } catch (ApplicationException ex) {
 
-            HttpStatus status =
-                    ex.getType() == ExceptionType.TOO_MANY_REQUEST
-                            ? HttpStatus.TOO_MANY_REQUESTS
-                            : HttpStatus.BAD_REQUEST;
+            addRateLimitHeaders(response, hashedKey);
+
+            HttpStatus status = HttpStatus.resolve(ex.getType().getHttpCode());
+            if (status == null) {
+                status = HttpStatus.BAD_REQUEST;
+            }
 
             writeErrorResponse(
                     response,
                     status,
+                    ex.getType().name(),
                     ex.getMessage()
             );
+        }
+    }
+
+    private void addRateLimitHeaders(HttpServletResponse response, String hashedKey) {
+        try {
+            RateLimitService.RateLimitStatus status = rateLimitService.getStatus(hashedKey);
+            response.setHeader("X-RateLimit-Limit", String.valueOf(status.limit()));
+            response.setHeader("X-RateLimit-Remaining", String.valueOf(status.remaining()));
+            response.setHeader("X-RateLimit-Reset", String.valueOf(status.resetEpochSeconds()));
+        } catch (Exception ignored) {
+            // best-effort headers only, never block the request because of them
         }
     }
 
     private void writeErrorResponse(
             HttpServletResponse response,
             HttpStatus status,
+            String code,
             String message
     ) throws IOException {
 
@@ -95,8 +113,11 @@ public class RateLimitFilter extends OncePerRequestFilter {
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .code(status.value())
-                .message(message)
+                .success(false)
+                .error(ErrorResponse.ErrorDetail.builder()
+                        .code(code)
+                        .message(message)
+                        .build())
                 .timestamp(LocalDateTime.now())
                 .build();
 

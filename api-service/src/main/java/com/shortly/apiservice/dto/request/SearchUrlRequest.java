@@ -7,4 +7,10 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 public class SearchUrlRequest extends PaginationRequest {
     private String search;
+
+    /** active | expired | suspended */
+    private String status;
+
+    /** field:direction, e.g. created_at:desc */
+    private String sort;
 }

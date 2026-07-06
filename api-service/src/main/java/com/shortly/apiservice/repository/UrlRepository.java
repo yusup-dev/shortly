@@ -6,13 +6,14 @@ import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
-import javax.swing.text.html.Option;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.UUID;
 
-public interface UrlRepository extends JpaRepository<Url, UUID> {
+public interface UrlRepository extends JpaRepository<Url, UUID>, JpaSpecificationExecutor<Url> {
 
     Optional<Url> findByOriginalUrlAndUser(String url, User user);
 
@@ -47,4 +48,16 @@ public interface UrlRepository extends JpaRepository<Url, UUID> {
     );
 
     Optional<Url> findByIdAndUser(UUID id,  User user);
+
+    @Query(value = """
+            SELECT COUNT(*) FROM urls WHERE deleted_at IS NULL AND status = 'ACTIVE'
+            AND (expires_at IS NULL OR expires_at > :now)
+            """, nativeQuery = true)
+    long countActive(@Param("now") LocalDateTime now);
+
+    @Query(value = """
+            SELECT COUNT(*) FROM urls WHERE deleted_at IS NULL AND status = 'ACTIVE'
+            AND expires_at IS NOT NULL AND expires_at <= :now
+            """, nativeQuery = true)
+    long countExpired(@Param("now") LocalDateTime now);
 }

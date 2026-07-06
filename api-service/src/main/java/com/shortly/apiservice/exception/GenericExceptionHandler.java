@@ -42,8 +42,11 @@ public class GenericExceptionHandler {
         resp.setStatus(status.value());
 
         return ErrorResponse.builder()
-                .code(status.value())
-                .message(exception.getMessage())
+                .success(false)
+                .error(ErrorResponse.ErrorDetail.builder()
+                        .code(type.name())
+                        .message(exception.getMessage())
+                        .build())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -64,8 +67,11 @@ public class GenericExceptionHandler {
         resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
 
         return ErrorResponse.builder()
-                .code(HttpStatus.FORBIDDEN.value())
-                .message(exception.getMessage())
+                .success(false)
+                .error(ErrorResponse.ErrorDetail.builder()
+                        .code("FORBIDDEN")
+                        .message(exception.getMessage())
+                        .build())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -83,9 +89,12 @@ public class GenericExceptionHandler {
         log.error("Validation error: {}", errors);
 
         return ErrorResponse.builder()
-                .code(HttpStatus.BAD_REQUEST.value())
-                .message("Validation failed")
-                .errors(errors)
+                .success(false)
+                .error(ErrorResponse.ErrorDetail.builder()
+                        .code("VALIDATION_ERROR")
+                        .message("Validation failed")
+                        .errors(errors)
+                        .build())
                 .timestamp(LocalDateTime.now())
                 .build();
     }
@@ -105,8 +114,11 @@ public class GenericExceptionHandler {
         resp.setStatus(status.value());
 
         return ErrorResponse.builder()
-                .code(status.value())
-                .message(exception.getMessage())
+                .success(false)
+                .error(ErrorResponse.ErrorDetail.builder()
+                        .code(status == HttpStatus.FORBIDDEN ? "FORBIDDEN" : "INTERNAL_SERVER_ERROR")
+                        .message(exception.getMessage())
+                        .build())
                 .timestamp(LocalDateTime.now())
                 .build();
     }

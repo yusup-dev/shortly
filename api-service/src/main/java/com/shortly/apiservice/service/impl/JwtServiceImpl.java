@@ -59,4 +59,14 @@ public class JwtServiceImpl implements JwtService {
                 .getBody()
                 .getSubject();
     }
+
+    @Override
+    public Date getExpiration(String token) {
+        JwtParser jwtParser = Jwts.parserBuilder()
+                .setSigningKey(signKey)
+                .build();
+        return jwtParser.parseClaimsJws(token)
+                .getBody()
+                .getExpiration();
+    }
 }

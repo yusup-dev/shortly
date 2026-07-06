@@ -12,4 +12,5 @@ import lombok.NoArgsConstructor;
 public class ApiKeyPlanCache {
     private Integer maxRequestsPerDay;
     private Integer maxUrlsPerKey;
+    private Integer maxBulk;
 }

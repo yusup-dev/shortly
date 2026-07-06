@@ -1,0 +1,5 @@
+ALTER TABLE urls
+    ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE';
+
+ALTER TABLE urls
+    ADD COLUMN suspended_reason VARCHAR(255);

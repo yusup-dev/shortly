@@ -1,7 +1,10 @@
 package com.shortly.apiservice.service;
 
-import org.springframework.stereotype.Service;
-
 public interface RateLimitService {
     void checkRateLimit(String apiKey);
+
+    RateLimitStatus getStatus(String apiKey);
+
+    record RateLimitStatus(long limit, long remaining, long resetEpochSeconds) {
+    }
 }

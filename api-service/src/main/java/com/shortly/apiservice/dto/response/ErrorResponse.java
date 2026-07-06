@@ -12,9 +12,17 @@ import java.util.Map;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-    private int code;
-    private String message;
+    @Builder.Default
+    private boolean success = false;
+    private ErrorDetail error;
     private LocalDateTime timestamp;
-    private Map<String, String> errors;  // Add this field
 
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class ErrorDetail {
+        private String code;
+        private String message;
+        private Map<String, String> errors;
+    }
 }

@@ -1,6 +1,7 @@
 package com.shortly.apiservice.controller.user;
 
 import com.shortly.apiservice.service.UrlService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,11 +18,12 @@ public class RedirectController {
 
     private final UrlService urlService;
 
-    @GetMapping("/{short_key}")
+    @GetMapping("/{shortKey}")
     public void redirect(
-            @PathVariable(name = "short_key") String short_key,
+            @PathVariable String shortKey,
+            HttpServletRequest request,
             HttpServletResponse response
     ) throws IOException {
-        urlService.redirect(short_key, response);
+        urlService.redirect(shortKey, request, response);
     }
 }

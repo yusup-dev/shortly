@@ -33,12 +33,12 @@ public class ApiSecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(registry -> registry.requestMatchers(
-                                "/api/auth/**",
+                                "/api/v1/auth/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/webhook/xendit/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.GET, "/{short_key}").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/{shortKey}").permitAll()
                         .anyRequest().authenticated()).sessionManagement(configure -> {
                     configure.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                 })

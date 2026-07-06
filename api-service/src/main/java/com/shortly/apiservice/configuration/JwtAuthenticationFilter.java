@@ -1,5 +1,7 @@
 package com.shortly.apiservice.configuration;
 
+import com.shortly.apiservice.constant.CacheConstants;
+import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.JwtService;
 import com.shortly.apiservice.service.impl.UserDetailsImpl;
 import jakarta.servlet.FilterChain;
@@ -27,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final UserDetailsImpl userDetailsImpl;
     private final JwtService jwtService;
     private final HandlerExceptionResolver handlerExceptionResolver;
+    private final CacheService cacheService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -34,7 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = getTokenFromRequest(request);
-            if (token != null && jwtService.validateToken(token)) {
+            if (token != null && !isBlacklisted(token) && jwtService.validateToken(token)) {
                 String username = jwtService.getUsernameFromToken(token);
                 Authentication currentAuth = SecurityContextHolder.getContext().getAuthentication();
 
@@ -58,5 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return bearerToken.substring(7);
         }
         return null;
+    }
+
+    private boolean isBlacklisted(String token) {
+        return cacheService.get(CacheConstants.CACHE_TOKEN_BLACKLIST + token, String.class).isPresent();
     }
 }

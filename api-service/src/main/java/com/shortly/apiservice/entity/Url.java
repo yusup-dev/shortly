@@ -1,5 +1,6 @@
 package com.shortly.apiservice.entity;
 
+import com.shortly.apiservice.enumaration.StatusType;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -49,13 +50,19 @@ public class Url {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private StatusType status = StatusType.ACTIVE;
+
+    @Column(name = "suspended_reason")
+    private String suspendedReason;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
-
-
 
 }

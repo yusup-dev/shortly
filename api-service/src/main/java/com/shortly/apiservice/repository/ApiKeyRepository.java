@@ -1,6 +1,7 @@
 package com.shortly.apiservice.repository;
 
 import com.shortly.apiservice.entity.ApiKey;
+import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.enumaration.KeyStatusType;
 import com.shortly.apiservice.repository.projection.ApiKeyPlanProjection;
 import io.lettuce.core.dynamic.annotation.Param;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -20,11 +22,11 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
     @Query(value = """
         SELECT
             ak.key_hash AS keyHash,
-            p.max_requests_per_day AS maxRequestsPerDay,
-            p.max_urls_per_key AS maxUrlsPerKey
+            q.max_requests_per_day AS maxRequestsPerDay,
+            q.max_urls_per_key AS maxUrlsPerKey,
+            q.max_bulk AS maxBulk
         FROM api_keys ak
-        JOIN users u ON ak.user_id = u.id
-        JOIN plans p ON u.plan_id = p.id
+        JOIN quotas q ON q.api_key_id = ak.id
         WHERE ak.key_hash = :apiKey
         AND ak.status = 'ACTIVE'
         AND ak.expires_at > NOW()
@@ -38,5 +40,8 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
     )
     Optional<ApiKey> findByStatusActiveAndUserId(@Param("keyStatus") KeyStatusType keyStatus, @Param("userId") UUID userId);
 
+    List<ApiKey> findByUser(User user);
+
+    Optional<ApiKey> findByUserAndStatus(User user, KeyStatusType status);
 
 }

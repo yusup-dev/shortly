@@ -59,8 +59,7 @@ public class QuotaServiceImpl implements QuotaService {
         // ===================
         if (count >= maxUrls) {
             throw new ApplicationException(
-                    ExceptionType.BAD_REQUEST,
-                    "Quota exceeded"
+                    ExceptionType.QUOTA_EXCEEDED
             );
         }
 

@@ -1,8 +1,11 @@
 package com.shortly.apiservice.service;
 
+import com.shortly.apiservice.dto.request.BulkUrlRequest;
+import com.shortly.apiservice.dto.request.UpdateExpiryRequest;
 import com.shortly.apiservice.dto.request.UpdateUrlRequest;
 import com.shortly.apiservice.dto.request.UrlRequest;
 import com.shortly.apiservice.dto.request.SearchUrlRequest;
+import com.shortly.apiservice.dto.response.BulkUrlResponse;
 import com.shortly.apiservice.dto.response.UrlResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -13,10 +16,11 @@ import java.util.UUID;
 
 public interface UrlService {
     UrlResponse createUrl(UrlRequest urlRequest, String apiKey, HttpServletRequest request);
-    void redirect(String shortKey, HttpServletResponse response) throws IOException;
+    BulkUrlResponse createBulk(BulkUrlRequest bulkUrlRequest, String apiKey, HttpServletRequest request);
+    void redirect(String shortKey, HttpServletRequest servletRequest, HttpServletResponse response) throws IOException;
     Page<UrlResponse> findAll(SearchUrlRequest request);
     UrlResponse findOne(UUID id);
-    UrlResponse update(UUID id, UpdateUrlRequest updateUrlRequest, HttpServletRequest request);
+    UrlResponse updateExpiry(UUID id, UpdateExpiryRequest updateExpiryRequest, HttpServletRequest request);
     void delete(UUID id, HttpServletRequest request);
 
     // admin
@@ -24,4 +28,5 @@ public interface UrlService {
     UrlResponse findOneForAdmin(UUID id);
     UrlResponse updateForAdmin(UUID id, UpdateUrlRequest updateUrlRequest, HttpServletRequest request);
     void deleteForAdmin(UUID id, HttpServletRequest request);
+    UrlResponse updateStatusForAdmin(UUID id, String status, String reason, HttpServletRequest request);
 }
