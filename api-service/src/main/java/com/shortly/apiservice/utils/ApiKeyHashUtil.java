@@ -11,7 +11,7 @@ public class ApiKeyHashUtil {
             byte[] hash = digest.digest(apiKey.getBytes());
             return HexFormat.of().formatHex(hash);
         } catch (Exception e) {
-            throw new RuntimeException();
+            throw new IllegalStateException("SHA-256 algorithm not available", e);
         }
     }
 }

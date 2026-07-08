@@ -9,8 +9,8 @@ import java.util.UUID;
 public interface ApiKeyService {
 
     String createApiKey(UUID userId);
-    ApiKeyResponse updateApiKey(UUID apiKey);
-    void revokeApiKey(UUID apiKey);
+    ApiKeyResponse updateApiKey(UUID apiKeyId);
+    void revokeApiKey(UUID apiKeyId);
 
     List<ApiKeyListResponse> listByUser(UUID userId);
     void revokeOwnApiKey(UUID apiKeyId, UUID userId);
