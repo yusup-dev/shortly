@@ -135,28 +135,34 @@ public class UrlController {
         );
     }
 
-    @GetMapping(value = "/{id}/qr", produces = { MediaType.IMAGE_PNG_VALUE, "image/svg+xml" })
+    private static final int QR_MIN_SIZE = 64;
+    private static final int QR_MAX_SIZE = 1024;
+
+    @GetMapping(value = "/{id}/qr", produces = MediaType.IMAGE_PNG_VALUE)
     public ResponseEntity<byte[]> qr(
             @PathVariable UUID id,
-            @RequestParam(defaultValue = "300") int size,
-            @RequestParam(defaultValue = "png") String format
+            @RequestParam(defaultValue = "300") int size
     ) {
-        UrlResponse url = urlService.findOne(id);
-        String normalizedFormat = format == null ? "png" : format.toLowerCase();
-        String cacheKey = CacheConstants.CACHE_QR + id + ":" + size + ":" + normalizedFormat;
+        if (size < QR_MIN_SIZE || size > QR_MAX_SIZE) {
+            throw new ApplicationException(
+                    ExceptionType.VALIDATION_ERROR,
+                    "Size harus antara " + QR_MIN_SIZE + " dan " + QR_MAX_SIZE
+            );
+        }
 
-        byte[] data = cacheService.get(cacheKey, byte[].class).orElseGet(() -> {
-            QrCodeService.QrImage image = qrCodeService.generate(url.getShortUrl(), url.getShortKey(), size, normalizedFormat);
-            cacheService.put(cacheKey, image.data(), Duration.ofHours(24));
-            return image.data();
+        UrlResponse url = urlService.findOne(id);
+        String cacheKey = CacheConstants.CACHE_QR + id + ":" + size;
+
+        byte[] data = cacheService.getBytes(cacheKey).orElseGet(() -> {
+            byte[] image = qrCodeService.generate(url.getShortUrl(), url.getShortKey(), size);
+            cacheService.putBytes(cacheKey, image, Duration.ofHours(24));
+            return image;
         });
 
-        String contentType = "svg".equals(normalizedFormat) ? "image/svg+xml" : MediaType.IMAGE_PNG_VALUE;
-
         return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
+                .contentType(MediaType.IMAGE_PNG)
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + url.getShortKey() + "." + normalizedFormat + "\"")
+                        "inline; filename=\"" + url.getShortKey() + ".png\"")
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
                 .body(data);
     }

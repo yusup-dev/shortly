@@ -23,24 +23,17 @@ import java.util.Map;
 public class QrCodeServiceImpl implements QrCodeService {
 
     @Override
-    public QrImage generate(String shortUrl, String shortKey, int size, String format) {
-        String normalizedFormat = (format == null || format.isBlank()) ? "png" : format.toLowerCase();
-
+    public byte[] generate(String shortUrl, String shortKey, int size) {
         try {
             Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
             hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.M);
             hints.put(EncodeHintType.MARGIN, 1);
 
             BitMatrix matrix = new QRCodeWriter().encode(shortUrl, BarcodeFormat.QR_CODE, size, size, hints);
-
-            if ("svg".equals(normalizedFormat)) {
-                return new QrImage(toSvg(matrix).getBytes(), "image/svg+xml", "svg");
-            }
-
             BufferedImage image = toBufferedImage(matrix);
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             ImageIO.write(image, "png", out);
-            return new QrImage(out.toByteArray(), "image/png", "png");
+            return out.toByteArray();
 
         } catch (WriterException | java.io.IOException e) {
             log.error("Failed to generate QR code for shortKey={}", shortKey, e);
@@ -59,26 +52,5 @@ public class QrCodeServiceImpl implements QrCodeService {
             }
         }
         return image;
-    }
-
-    private String toSvg(BitMatrix matrix) {
-        int width = matrix.getWidth();
-        int height = matrix.getHeight();
-        StringBuilder svg = new StringBuilder();
-        svg.append("<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 ")
-                .append(width).append(" ").append(height)
-                .append("\" shape-rendering=\"crispEdges\">");
-        svg.append("<rect width=\"100%\" height=\"100%\" fill=\"#ffffff\"/>");
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (matrix.get(x, y)) {
-                    svg.append("<rect x=\"").append(x).append("\" y=\"").append(y)
-                            .append("\" width=\"1\" height=\"1\" fill=\"#000000\"/>");
-                }
-            }
-        }
-        svg.append("</svg>");
-        return svg.toString();
     }
 }
