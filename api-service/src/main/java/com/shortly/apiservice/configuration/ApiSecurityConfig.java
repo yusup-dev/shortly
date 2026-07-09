@@ -63,6 +63,11 @@ public class ApiSecurityConfig {
         ));
         configuration.setAllowedMethods(List.of("*"));
         configuration.setAllowedHeaders(List.of("*"));
+        configuration.setExposedHeaders(List.of(
+                "X-RateLimit-Limit",
+                "X-RateLimit-Remaining",
+                "X-RateLimit-Reset"
+        ));
         configuration.setAllowCredentials(true);
 
 

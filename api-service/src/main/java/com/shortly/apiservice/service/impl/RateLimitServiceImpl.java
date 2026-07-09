@@ -8,12 +8,13 @@ import com.shortly.apiservice.service.PlanService;
 import com.shortly.apiservice.service.RateLimitService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 @Service
@@ -21,65 +22,59 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 public class RateLimitServiceImpl implements RateLimitService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final StringRedisTemplate stringRedisTemplate;
     private final PlanService planService;
 
     @Override
     public void checkRateLimit(String apiKey) {
-
-        // ===================
-        // 1. GET PLAN (CACHE FIRST)
-        // ===================
-        ApiKeyPlanCache plan = planService.getPlan(apiKey);
-
-        int maxRequests = plan.getMaxRequestsPerDay();
-
-        // ===================
-        // 2. BUILD REDIS KEY
-        // ===================
+        long maxRequests = resolveMaxRequests(planService.getPlan(apiKey));
         String redisKey = buildKey(apiKey);
 
-        // ===================
-        // 3. INCREMENT COUNTER
-        // ===================
-        Long count = redisTemplate.opsForValue().increment(redisKey);
+        Long count = stringRedisTemplate.opsForValue().increment(redisKey);
 
-        // ===================
-        // 4. SET TTL (DAILY RESET)
-        // ===================
         if (count != null && count == 1) {
-
             long secondsUntilMidnight = LocalDateTime.now()
-                            .until(LocalDate.now().plusDays(1).atStartOfDay(), ChronoUnit.SECONDS);
-
-            redisTemplate.expire(redisKey, Duration.ofSeconds(secondsUntilMidnight));
+                    .until(LocalDate.now().plusDays(1).atStartOfDay(), ChronoUnit.SECONDS);
+            stringRedisTemplate.expire(redisKey, Duration.ofSeconds(secondsUntilMidnight));
         }
 
-        // ===================
-        // 5. VALIDATE LIMIT
-        // ===================
-        if(count != null && count > maxRequests) {
-            throw new ApplicationException(
-                    ExceptionType.RATE_LIMIT_EXCEEDED
-            );
+        if (count != null && count > maxRequests) {
+            throw new ApplicationException(ExceptionType.RATE_LIMIT_EXCEEDED);
         }
+
+        log.debug("Rate limit apiKey={} count={}/{}", apiKey, count, maxRequests);
     }
 
     @Override
     public RateLimitStatus getStatus(String apiKey) {
-        ApiKeyPlanCache plan = planService.getPlan(apiKey);
-        int maxRequests = plan.getMaxRequestsPerDay();
-
-        String redisKey = buildKey(apiKey);
-        Object cached = redisTemplate.opsForValue().get(redisKey);
-        long used = (cached instanceof Number number) ? number.longValue() : 0L;
-
+        long maxRequests = resolveMaxRequests(planService.getPlan(apiKey));
+        long used = readCounter(buildKey(apiKey));
         long remaining = Math.max(0, maxRequests - used);
         long resetEpochSeconds = LocalDate.now().plusDays(1)
-                .atStartOfDay(java.time.ZoneId.systemDefault())
+                .atStartOfDay(ZoneId.systemDefault())
                 .toEpochSecond();
 
-        return new RateLimitService.RateLimitStatus(maxRequests, remaining, resetEpochSeconds);
+        return new RateLimitStatus(maxRequests, remaining, resetEpochSeconds);
+    }
+
+    private long resolveMaxRequests(ApiKeyPlanCache plan) {
+        Integer maxRequests = plan.getMaxRequestsPerDay();
+        return maxRequests == null || maxRequests < 0 ? 0 : maxRequests;
+    }
+
+    private long readCounter(String redisKey) {
+        String cached = stringRedisTemplate.opsForValue().get(redisKey);
+        if (cached == null) {
+            return 0L;
+        }
+
+        try {
+            return Long.parseLong(cached);
+        } catch (NumberFormatException ex) {
+            log.warn("Invalid rate-limit counter for key={} value={}", redisKey, cached);
+            stringRedisTemplate.delete(redisKey);
+            return 0L;
+        }
     }
 
     private String buildKey(String apiKey) {

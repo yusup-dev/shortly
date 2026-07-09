@@ -52,14 +52,12 @@ public class RateLimitFilter extends OncePerRequestFilter {
         String rawApiKey = request.getHeader("X-API-KEY");
 
         if (rawApiKey == null || rawApiKey.isBlank()) {
-
             writeErrorResponse(
                     response,
                     HttpStatus.BAD_REQUEST,
-                    "MISSING_API_KEY",
-                    "Missing API KEY"
+                    ExceptionType.MISSING_API_KEY.name(),
+                    ExceptionType.MISSING_API_KEY.getMessage()
             );
-
             return;
         }
 

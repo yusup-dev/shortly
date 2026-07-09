@@ -9,7 +9,7 @@ import com.shortly.apiservice.service.PlanService;
 import com.shortly.apiservice.service.QuotaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -19,48 +19,19 @@ import java.time.Duration;
 @Slf4j
 public class QuotaServiceImpl implements QuotaService {
 
-    private final RedisTemplate<String, Object> redisTemplate;
+    private static final Duration QUOTA_CACHE_TTL = Duration.ofHours(1);
+
+    private final StringRedisTemplate stringRedisTemplate;
     private final UrlRepository urlRepository;
     private final PlanService planService;
 
     @Override
     public void checkQuota(String apiKey) {
-        // ===============
-        // 1. GET PLAN (REDIS)
-        // ===============
-        ApiKeyPlanCache plan = planService.getPlan(apiKey);
-        int maxUrls = plan.getMaxUrlsPerKey();
+        long maxUrls = resolveMaxUrls(planService.getPlan(apiKey));
+        long count = getOrSeedCounter(apiKey);
 
-        String redisKey = buildKey(apiKey);
-
-        // 2. GET COUNTER
-        Long count = null;
-
-        Object cachedCount = redisTemplate.opsForValue().get(redisKey);
-
-        if (cachedCount instanceof Number number) {
-            count = number.longValue();
-        }
-        // ===================
-        // 3. FALLBACK KE DB (ONLY ONCE)
-        // ===================
-        if (count == null) {
-            count = urlRepository.countByApiKeyHash(apiKey);
-
-            redisTemplate.opsForValue().set(
-                    redisKey,
-                    count,
-                    Duration.ofHours(1)
-            );
-        }
-
-        // ===================
-        // 4. VALIDATE
-        // ===================
         if (count >= maxUrls) {
-            throw new ApplicationException(
-                    ExceptionType.QUOTA_EXCEEDED
-            );
+            throw new ApplicationException(ExceptionType.QUOTA_EXCEEDED);
         }
 
         log.debug("Quota apiKey={} count={}/{}", apiKey, count, maxUrls);
@@ -69,21 +40,48 @@ public class QuotaServiceImpl implements QuotaService {
     @Override
     public void incrementQuota(String apiKey) {
         String redisKey = buildKey(apiKey);
-        Long count = redisTemplate.opsForValue().increment(redisKey);
+        Long count = stringRedisTemplate.opsForValue().increment(redisKey);
+
+        if (count != null && count == 1) {
+            stringRedisTemplate.expire(redisKey, QUOTA_CACHE_TTL);
+        }
 
         if (count != null && count < 0) {
-            redisTemplate.opsForValue().set(redisKey, 0);
+            stringRedisTemplate.opsForValue().set(redisKey, "0", QUOTA_CACHE_TTL);
         }
     }
 
     @Override
     public void decrementQuota(String apiKey) {
         String redisKey = buildKey(apiKey);
-        Long count = redisTemplate.opsForValue().decrement(redisKey);
+        Long count = stringRedisTemplate.opsForValue().decrement(redisKey);
 
-        if(count != null && count < 0) {
-            redisTemplate.opsForValue().set(redisKey, 0);
+        if (count != null && count < 0) {
+            stringRedisTemplate.opsForValue().set(redisKey, "0", QUOTA_CACHE_TTL);
         }
+    }
+
+    private long getOrSeedCounter(String apiKey) {
+        String redisKey = buildKey(apiKey);
+        String cached = stringRedisTemplate.opsForValue().get(redisKey);
+
+        if (cached != null) {
+            try {
+                return Long.parseLong(cached);
+            } catch (NumberFormatException ex) {
+                log.warn("Invalid quota counter for key={} value={}", redisKey, cached);
+                stringRedisTemplate.delete(redisKey);
+            }
+        }
+
+        long count = urlRepository.countByApiKeyHash(apiKey);
+        stringRedisTemplate.opsForValue().set(redisKey, String.valueOf(count), QUOTA_CACHE_TTL);
+        return count;
+    }
+
+    private long resolveMaxUrls(ApiKeyPlanCache plan) {
+        Integer maxUrls = plan.getMaxUrlsPerKey();
+        return maxUrls == null || maxUrls < 0 ? 0 : maxUrls;
     }
 
     private String buildKey(String apiKey) {
