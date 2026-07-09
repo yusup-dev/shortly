@@ -108,7 +108,7 @@ public class UrlController {
     @PatchMapping("/{id}")
     public ResponseEntity<ApiResponse<UrlResponse>> updateExpiry(
             @PathVariable UUID id,
-            @RequestBody UpdateExpiryRequest updateExpiryRequest,
+            @Valid @RequestBody UpdateExpiryRequest updateExpiryRequest,
             HttpServletRequest request
     ) {
         UrlResponse data = urlService.updateExpiry(id, updateExpiryRequest, request);
@@ -130,7 +130,7 @@ public class UrlController {
         return ResponseEntity.ok(
                 ApiResponse.builder()
                         .success(true)
-                        .message("URL berhasil dihapus")
+                        .message("Url deleted successfully")
                         .build()
         );
     }

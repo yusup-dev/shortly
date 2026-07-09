@@ -362,17 +362,23 @@ public class UrlServiceImpl implements UrlService {
     public Page<UrlResponse> findAll(SearchUrlRequest request) {
         User currentUser = userService.getCurrentUser();
 
-        Pageable pageable = PageRequest.of(
-                request.getPage() - 1,
-                request.getLimit(),
-                buildSort(request.getSort())
-        );
-
+        Pageable pageable = buildPageable(request);
         Specification<Url> spec = buildSpecification(currentUser, request);
 
         Page<Url> page = urlRepository.findAll(spec, pageable);
 
         return page.map(url -> UrlResponse.from(url, baseUrl, analyticsService.getTotalClicks(url.getId())));
+    }
+
+    private Pageable buildPageable(SearchUrlRequest request) {
+        int page = request.getPage() == null || request.getPage() < 1 ? 1 : request.getPage();
+        int limit = request.getLimit() == null ? 10 : request.getLimit();
+        if (limit < 1) {
+            limit = 10;
+        } else if (limit > 100) {
+            limit = 100;
+        }
+        return PageRequest.of(page - 1, limit, buildSort(request.getSort()));
     }
 
     private Specification<Url> buildSpecification(User user, SearchUrlRequest request) {
@@ -384,7 +390,11 @@ public class UrlServiceImpl implements UrlService {
             }
 
             if (StringUtils.hasText(request.getSearch())) {
-                predicates.add(cb.like(cb.lower(root.get("originalUrl")), "%" + request.getSearch().toLowerCase() + "%"));
+                String term = "%" + request.getSearch().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("originalUrl")), term),
+                        cb.like(cb.lower(root.get("shortKey")), term)
+                ));
             }
 
             if (StringUtils.hasText(request.getStatus())) {
@@ -435,22 +445,25 @@ public class UrlServiceImpl implements UrlService {
     @Override
     public UrlResponse findOne(UUID id) {
         User currentUser = userService.getCurrentUser();
-
-        Url url = urlRepository.findByIdAndUser(id, currentUser)
-                .orElseThrow(() ->
-                        new ApplicationException(ExceptionType.SHORT_URL_NOT_FOUND));
-
+        Url url = findOwnedUrl(id, currentUser.getId());
         return UrlResponse.from(url, baseUrl, analyticsService.getTotalClicks(url.getId()));
     }
 
+    @Transactional
     @Override
     public UrlResponse updateExpiry(UUID id, UpdateExpiryRequest updateExpiryRequest, HttpServletRequest request) {
         User currentUser = userService.getCurrentUser();
+        Url url = findOwnedUrl(id, currentUser.getId());
 
-        Url url = urlRepository.findByIdAndUser(id, currentUser)
-                .orElseThrow(() -> new ApplicationException(ExceptionType.SHORT_URL_NOT_FOUND));
+        LocalDateTime expireAt = updateExpiryRequest.getExpireAt();
+        if (expireAt != null && !expireAt.isAfter(LocalDateTime.now())) {
+            throw new ApplicationException(
+                    ExceptionType.VALIDATION_ERROR,
+                    "expire_at harus di masa depan"
+            );
+        }
 
-        url.setExpiresAt(updateExpiryRequest.getExpireAt());
+        url.setExpiresAt(expireAt);
 
         Url updated = urlRepository.save(url);
 
@@ -466,12 +479,11 @@ public class UrlServiceImpl implements UrlService {
         return UrlResponse.from(updated, baseUrl, analyticsService.getTotalClicks(updated.getId()));
     }
 
+    @Transactional
     @Override
     public void delete(UUID id, HttpServletRequest request) {
         User currentUser = userService.getCurrentUser();
-
-        Url url = urlRepository.findByIdAndUser(id, currentUser)
-                .orElseThrow(() -> new ApplicationException(ExceptionType.SHORT_URL_NOT_FOUND));
+        Url url = findOwnedUrl(id, currentUser.getId());
 
         auditLogService.saveAuditLog(
                 request,
@@ -480,11 +492,18 @@ public class UrlServiceImpl implements UrlService {
                 url.getId()
         );
 
-        cacheService.evict(CacheConstants.CACHE_URL + url.getShortKey());
-
+        evictUrlCache(url);
         urlRepository.delete(url);
-
         decrementQuotaForUrl(url);
+    }
+
+    private Url findOwnedUrl(UUID id, UUID userId) {
+        return urlRepository.findByIdAndUser_Id(id, userId)
+                .orElseThrow(() -> new ApplicationException(ExceptionType.SHORT_URL_NOT_FOUND));
+    }
+
+    private void evictUrlCache(Url url) {
+        cacheService.evict(CacheConstants.CACHE_URL + url.getShortKey());
     }
 
     private void decrementQuotaForUrl(Url url) {
@@ -497,11 +516,7 @@ public class UrlServiceImpl implements UrlService {
 
     @Override
     public Page<UrlResponse> findAllForAdmin(SearchUrlRequest request) {
-        Pageable pageable = PageRequest.of(
-                request.getPage() - 1,
-                request.getLimit(),
-                buildSort(request.getSort())
-        );
+        Pageable pageable = buildPageable(request);
 
         Specification<Url> spec = buildSpecification(null, request);
 
@@ -553,8 +568,7 @@ public class UrlServiceImpl implements UrlService {
                 url.getId()
         );
 
-        cacheService.evict(CacheConstants.CACHE_URL + url.getShortKey());
-
+        evictUrlCache(url);
         urlRepository.delete(url);
 
         decrementQuotaForUrl(url);

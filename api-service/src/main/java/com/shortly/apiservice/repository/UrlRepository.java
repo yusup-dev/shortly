@@ -1,7 +1,6 @@
 package com.shortly.apiservice.repository;
 
 import com.shortly.apiservice.entity.Url;
-import com.shortly.apiservice.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -26,7 +25,7 @@ public interface UrlRepository extends JpaRepository<Url, UUID>, JpaSpecificatio
             """, nativeQuery = true)
     Long countByApiKeyHash(@Param("apiKey") String apiKey);
 
-    Optional<Url> findByIdAndUser(UUID id,  User user);
+    Optional<Url> findByIdAndUser_Id(UUID id, UUID userId);
 
     @Query(value = """
             SELECT COUNT(*) FROM urls WHERE deleted_at IS NULL AND status = 'ACTIVE'
