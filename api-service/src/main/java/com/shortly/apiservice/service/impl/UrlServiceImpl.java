@@ -48,6 +48,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
@@ -65,6 +66,7 @@ public class UrlServiceImpl implements UrlService {
     private final AnalyticsService analyticsService;
 
     private static final Duration DEFAULT_EXPIRY = Duration.ofDays(7);
+    private static final Pattern ALIAS_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]{3,50}$");
 
     @Value("${base.url}")
     private String baseUrl;
@@ -209,13 +211,16 @@ public class UrlServiceImpl implements UrlService {
 
         boolean isPro = currentUser.getPlan() != null && currentUser.getPlan().getName() == PlanType.PRO;
 
-        String alias = urlRequest.getAlias();
+        String alias = StringUtils.hasText(urlRequest.getAlias())
+                ? urlRequest.getAlias().trim()
+                : null;
         String shortKey;
 
         if (StringUtils.hasText(alias)) {
             if (!isPro) {
                 throw new ApplicationException(ExceptionType.NOT_PRO_PLAN, "Custom alias hanya untuk plan Pro");
             }
+            validateAlias(alias);
             if (urlRepository.existsByShortKey(alias)) {
                 throw new ApplicationException(
                         ExceptionType.ALIAS_ALREADY_TAKEN,
@@ -231,6 +236,12 @@ public class UrlServiceImpl implements UrlService {
         if (urlRequest.getExpireAt() != null) {
             if (!isPro) {
                 throw new ApplicationException(ExceptionType.NOT_PRO_PLAN, "Custom expiry hanya untuk plan Pro");
+            }
+            if (!urlRequest.getExpireAt().isAfter(LocalDateTime.now())) {
+                throw new ApplicationException(
+                        ExceptionType.VALIDATION_ERROR,
+                        "expire_at harus di masa depan"
+                );
             }
             expiresAt = urlRequest.getExpireAt();
         } else {
@@ -268,6 +279,15 @@ public class UrlServiceImpl implements UrlService {
                 ExceptionType.INTERNAL_SERVER_ERROR,
                 "Gagal menghasilkan short key unik"
         );
+    }
+
+    private void validateAlias(String alias) {
+        if (!ALIAS_PATTERN.matcher(alias).matches()) {
+            throw new ApplicationException(
+                    ExceptionType.VALIDATION_ERROR,
+                    "Alias harus 3-50 karakter (huruf, angka, underscore, hyphen)"
+            );
+        }
     }
 
     private boolean isValidUrl(String value) {

@@ -12,6 +12,7 @@ import java.util.Map;
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class AdvancedAnalyticsResponse {
+    private PeriodResponse period;
     private long totalClicks;
     private long uniqueVisitors;
     private List<Map<String, Object>> byDay;

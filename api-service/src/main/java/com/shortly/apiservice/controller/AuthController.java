@@ -3,11 +3,10 @@ package com.shortly.apiservice.controller;
 import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.UserInfo;
 import com.shortly.apiservice.dto.request.AuthRequest;
+import com.shortly.apiservice.dto.request.RefreshTokenRequest;
 import com.shortly.apiservice.dto.request.UserRegisterRequest;
 import com.shortly.apiservice.dto.response.*;
 import com.shortly.apiservice.entity.User;
-import com.shortly.apiservice.enumaration.ExceptionType;
-import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.AuthService;
 import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.JwtService;
@@ -24,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
 import java.util.Date;
-import java.util.Map;
 
 @Slf4j
 @RestController
@@ -39,66 +37,71 @@ public class AuthController {
     private final RefreshTokenService refreshTokenService;
     private final CacheService cacheService;
 
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<UserRegisterResponse>> register(
+            @Valid @RequestBody UserRegisterRequest userRegisterRequest
+    ) {
+        UserRegisterResponse data = userService.register(userRegisterRequest);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.<UserRegisterResponse>builder()
+                        .success(true)
+                        .message("Register successfully!")
+                        .data(data)
+                        .build()
+        );
+    }
+
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<AuthResponse>> login(
             @Valid @RequestBody AuthRequest authRequest
     ) {
-        try {
-            UserInfo userInfo = authService.authenticate(authRequest);
-            TokenResponse tokenResponse = jwtService.generateToken(userInfo);
-            String refreshToken = refreshTokenService.createRefreshToken(userInfo);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    ApiResponse.<AuthResponse>builder()
-                            .success(true)
-                            .message("Login successfully!")
-                            .data(AuthResponse.from(userInfo, tokenResponse, refreshToken))
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new ApplicationException(ExceptionType.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+        UserInfo userInfo = authService.authenticate(authRequest);
+        TokenResponse tokenResponse = jwtService.generateToken(userInfo);
+        String refreshToken = refreshTokenService.createRefreshToken(userInfo);
+        return ResponseEntity.ok(
+                ApiResponse.<AuthResponse>builder()
+                        .success(true)
+                        .message("Login successfully!")
+                        .data(AuthResponse.from(userInfo, tokenResponse, refreshToken))
+                        .build()
+        );
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<UserRegisterResponse>> login(
-            @Valid @RequestBody UserRegisterRequest userRegisterRequest
-            ) {
-        try {
-            UserRegisterResponse data = userService.register(userRegisterRequest);
-            return ResponseEntity.status(HttpStatus.OK).body(
-                    ApiResponse.<UserRegisterResponse>builder()
-                            .success(true)
-                            .message("Register successfully!")
-                            .data(data)
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new ApplicationException(ExceptionType.INTERNAL_SERVER_ERROR, e.getMessage());
-        }
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserResponse>> me() {
+        User currentUser = userService.getCurrentUser();
+        return ResponseEntity.ok(
+                ApiResponse.<UserResponse>builder()
+                        .success(true)
+                        .message("User profile retrieved successfully!")
+                        .data(UserResponse.from(currentUser))
+                        .build()
+        );
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refresh(@RequestBody Map<String, String> body) {
-        try {
-          return ResponseEntity.status(HttpStatus.OK)
-                    .body(refreshTokenService.refresh(body.get("refreshToken")));
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new ApplicationException(ExceptionType.UNAUTHORIZED, e.getMessage());
-        }
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(
+            @Valid @RequestBody RefreshTokenRequest request
+    ) {
+        AuthResponse data = refreshTokenService.refresh(request.getRefreshToken());
+        return ResponseEntity.ok(
+                ApiResponse.<AuthResponse>builder()
+                        .success(true)
+                        .message("Token refreshed successfully!")
+                        .data(data)
+                        .build()
+        );
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<?> logout(
-            @RequestBody(required = false) Map<String, String> body,
-            HttpServletRequest request
+    public ResponseEntity<Void> logout(
+            @RequestBody(required = false) RefreshTokenRequest request,
+            HttpServletRequest httpRequest
     ) {
-        blacklistAccessToken(request);
+        blacklistAccessToken(httpRequest);
 
-        if (body != null && body.get("refreshToken") != null) {
-            refreshTokenService.deleteToken(body.get("refreshToken"));
+        if (request != null && request.getRefreshToken() != null) {
+            refreshTokenService.deleteToken(request.getRefreshToken());
         }
 
         return ResponseEntity.noContent().build();
@@ -123,27 +126,6 @@ public class AuthController {
             }
         } catch (Exception e) {
             log.warn("Failed to blacklist access token on logout: {}", e.getMessage());
-        }
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<ApiResponse<UserResponse>> me() {
-        try {
-            User currentUser = userService.getCurrentUser();
-
-            return ResponseEntity.ok(
-                    ApiResponse.<UserResponse>builder()
-                            .success(true)
-                            .message("User profile retrieved successfully!")
-                            .data(UserResponse.from(currentUser))
-                            .build()
-            );
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            throw new ApplicationException(
-                    ExceptionType.UNAUTHORIZED,
-                    e.getMessage()
-            );
         }
     }
 }

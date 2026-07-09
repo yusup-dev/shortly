@@ -29,7 +29,7 @@ public class AuthServiceImpl implements AuthService {
 
             return (UserInfo) authentication.getPrincipal();
         } catch (Exception e) {
-            log.error("Error this program : " + e.getMessage());
+            log.warn("Authentication failed for email {}: {}", authRequest.getEmail(), e.getMessage());
             throw new ApplicationException(ExceptionType.INVALID_PASSWORD);
         }
     }

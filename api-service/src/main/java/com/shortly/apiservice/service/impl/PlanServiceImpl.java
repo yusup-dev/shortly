@@ -1,6 +1,5 @@
 package com.shortly.apiservice.service.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.dto.response.ApiKeyPlanCache;
 import com.shortly.apiservice.enumaration.ExceptionType;
@@ -10,7 +9,6 @@ import com.shortly.apiservice.repository.projection.ApiKeyPlanProjection;
 import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.PlanService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
@@ -18,9 +16,7 @@ import java.time.Duration;
 @Service
 @RequiredArgsConstructor
 public class PlanServiceImpl implements PlanService {
-    private final RedisTemplate<String, Object> redisTemplate;
     private final ApiKeyRepository apiKeyRepository;
-    private final ObjectMapper objectMapper;
     private final CacheService cacheService;
 
     @Override

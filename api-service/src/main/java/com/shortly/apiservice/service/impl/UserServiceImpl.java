@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
             throw new ApplicationException(ExceptionType.EMAIL_ALREADY_EXISTS);
         }
 
-        if(!userRegisterRequest.getPassword().equals(userRegisterRequest.getPassword())) {
+        if(!userRegisterRequest.getPassword().equals(userRegisterRequest.getPasswordConfirmation())) {
             throw new ApplicationException(ExceptionType.BAD_REQUEST,
                     ExceptionType.BAD_REQUEST.getFormattedMessage("Password do not match"));
         }

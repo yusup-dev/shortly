@@ -5,10 +5,14 @@ import com.shortly.apiservice.dto.response.AdvancedAnalyticsResponse;
 import com.shortly.apiservice.dto.response.ClickAnalyticsResponse;
 import com.shortly.apiservice.dto.response.PeriodResponse;
 import com.shortly.apiservice.entity.UrlClick;
+import com.shortly.apiservice.enumaration.ExceptionType;
+import com.shortly.apiservice.enumaration.PlanType;
+import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.repository.UrlClickRepository;
 import com.shortly.apiservice.repository.projection.UrlClickAggregateProjection;
 import com.shortly.apiservice.service.AnalyticsService;
 import com.shortly.apiservice.service.GeoIpService;
+import com.shortly.apiservice.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import nl.basjes.parse.useragent.UserAgent;
@@ -37,6 +41,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private final StringRedisTemplate stringRedisTemplate;
     private final UserAgentAnalyzer userAgentAnalyzer;
     private final GeoIpService geoIpService;
+    private final UserService userService;
 
     @Async("analyticsExecutor")
     @Override
@@ -119,6 +124,11 @@ public class AnalyticsServiceImpl implements AnalyticsService {
 
     @Override
     public AdvancedAnalyticsResponse getAdvancedAnalytics(UUID urlId, LocalDate from, LocalDate to) {
+        var currentUser = userService.getCurrentUser();
+        if (currentUser.getPlan() == null || currentUser.getPlan().getName() != PlanType.PRO) {
+            throw new ApplicationException(ExceptionType.NOT_PRO_PLAN, "Analytics lengkap hanya untuk plan Pro");
+        }
+
         LocalDateTime fromDt = from.atStartOfDay();
         LocalDateTime toDt = to.atTime(LocalTime.MAX);
 
@@ -126,6 +136,7 @@ public class AnalyticsServiceImpl implements AnalyticsService {
         long uniqueVisitors = countUniqueVisitors(urlId, from, to);
 
         return AdvancedAnalyticsResponse.builder()
+                .period(PeriodResponse.builder().from(from).to(to).build())
                 .totalClicks(totalClicks)
                 .uniqueVisitors(uniqueVisitors)
                 .byDay(toMapList("date", urlClickRepository.aggregateByDay(urlId, fromDt, toDt)))

@@ -7,14 +7,11 @@ import com.shortly.apiservice.dto.request.UrlRequest;
 import com.shortly.apiservice.dto.response.*;
 import com.shortly.apiservice.constant.CacheConstants;
 import com.shortly.apiservice.enumaration.ExceptionType;
-import com.shortly.apiservice.enumaration.PlanType;
-import com.shortly.apiservice.entity.User;
 import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.AnalyticsService;
 import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.QrCodeService;
 import com.shortly.apiservice.service.UrlService;
-import com.shortly.apiservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -43,7 +40,6 @@ public class UrlController {
     private final UrlService urlService;
     private final QrCodeService qrCodeService;
     private final AnalyticsService analyticsService;
-    private final UserService userService;
     private final CacheService cacheService;
 
     @PostMapping
@@ -64,7 +60,7 @@ public class UrlController {
 
     @PostMapping("/bulk")
     public ResponseEntity<ApiResponse<BulkUrlResponse>> createBulk(
-            @RequestBody BulkUrlRequest bulkUrlRequest,
+            @Valid @RequestBody BulkUrlRequest bulkUrlRequest,
             @RequestHeader("X-API-KEY") String apiKey,
             HttpServletRequest request
     ) {
@@ -197,11 +193,6 @@ public class UrlController {
     ) {
         // ownership check + ensures the URL exists
         urlService.findOne(id);
-
-        User currentUser = userService.getCurrentUser();
-        if (currentUser.getPlan() == null || currentUser.getPlan().getName() != PlanType.PRO) {
-            throw new ApplicationException(ExceptionType.NOT_PRO_PLAN, "Analytics lengkap hanya untuk plan Pro");
-        }
 
         LocalDate resolvedTo = to != null ? to : LocalDate.now();
         LocalDate resolvedFrom = from != null ? from : resolvedTo.minusDays(30);

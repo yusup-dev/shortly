@@ -3,15 +3,18 @@ package com.shortly.apiservice.dto.request;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-
-import java.time.LocalDateTime;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class BulkUrlItemRequest {
-    @NotBlank(message = "original_url wajib diisi")
-    private String originalUrl;
-    private String alias;
-    private LocalDateTime expireAt;
+public class RefreshTokenRequest {
+
+    @NotBlank(message = "Refresh token is required")
+    private String refreshToken;
 }
