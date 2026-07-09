@@ -4,3 +4,10 @@
 *.iml
 *.ipr
 .cursor
+
+# Environment secrets
+.env
+
+# GeoLite2 database (MaxMind license — do not commit)
+data/*.mmdb
+data/*.tar.gz
