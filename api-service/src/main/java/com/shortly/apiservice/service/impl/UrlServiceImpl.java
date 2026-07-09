@@ -74,8 +74,8 @@ public class UrlServiceImpl implements UrlService {
     public UrlResponse createUrl(UrlRequest urlRequest, String apiKey, HttpServletRequest request) {
 
         String hashedKey = ApiKeyHashUtil.hash(apiKey);
-        ApiKey key = validateApiKey(hashedKey);
         User currentUser = userService.getCurrentUser();
+        ApiKey key = validateApiKey(hashedKey, currentUser);
 
         quotaService.checkQuota(hashedKey);
 
@@ -93,7 +93,7 @@ public class UrlServiceImpl implements UrlService {
 
         quotaService.incrementQuota(hashedKey);
 
-        return UrlResponse.from(saved, baseUrl, 0L);
+        return UrlResponse.from(saved, baseUrl);
     }
 
     @Transactional
@@ -101,8 +101,8 @@ public class UrlServiceImpl implements UrlService {
     public BulkUrlResponse createBulk(BulkUrlRequest bulkUrlRequest, String apiKey, HttpServletRequest request) {
 
         String hashedKey = ApiKeyHashUtil.hash(apiKey);
-        ApiKey key = validateApiKey(hashedKey);
         User currentUser = userService.getCurrentUser();
+        ApiKey key = validateApiKey(hashedKey, currentUser);
 
         if (currentUser.getPlan() == null || currentUser.getPlan().getName() != PlanType.PRO) {
             throw new ApplicationException(ExceptionType.NOT_PRO_PLAN, "Bulk shorten hanya untuk plan Pro");
@@ -186,13 +186,16 @@ public class UrlServiceImpl implements UrlService {
                 .build();
     }
 
-    private ApiKey validateApiKey(String hashedKey) {
+    private ApiKey validateApiKey(String hashedKey, User currentUser) {
         ApiKey key = apiKeyRepository.findByKeyHash(hashedKey);
         if (key == null
                 || key.getStatus() != KeyStatusType.ACTIVE
                 || key.getExpiresAt() == null
                 || key.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ApplicationException(ExceptionType.INVALID_API_KEY);
+        }
+        if (key.getUser() == null || !key.getUser().getId().equals(currentUser.getId())) {
+            throw new ApplicationException(ExceptionType.FORBIDDEN, "API key ini bukan milik kamu");
         }
         return key;
     }
@@ -246,22 +249,25 @@ public class UrlServiceImpl implements UrlService {
     }
 
     private String generateUniqueKey() {
-        String shortKey;
-        int retry = 0;
-        do {
-            if (retry >= 3) {
-                throw new RuntimeException("Failed to generate unique short key");
-            }
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            String shortKey;
             try {
                 shortKey = kgsClient.getKey();
             } catch (Exception e) {
-                log.error("Failed to get key from KGS", e);
-                throw new RuntimeException("Failed to generate short key");
+                log.error("Failed to get key from KGS on attempt={}", attempt, e);
+                throw new ApplicationException(
+                        ExceptionType.INTERNAL_SERVER_ERROR,
+                        "Gagal menghasilkan short key"
+                );
             }
-            retry++;
-        } while (urlRepository.existsByShortKey(shortKey));
-
-        return shortKey;
+            if (!urlRepository.existsByShortKey(shortKey)) {
+                return shortKey;
+            }
+        }
+        throw new ApplicationException(
+                ExceptionType.INTERNAL_SERVER_ERROR,
+                "Gagal menghasilkan short key unik"
+        );
     }
 
     private boolean isValidUrl(String value) {

@@ -17,6 +17,7 @@ import com.shortly.apiservice.service.UrlService;
 import com.shortly.apiservice.service.UserService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -47,7 +48,7 @@ public class UrlController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<UrlResponse>> create(
-            @RequestBody UrlRequest urlRequest,
+            @Valid @RequestBody UrlRequest urlRequest,
             @RequestHeader("X-API-KEY") String apiKey,
             HttpServletRequest request
     ) {
