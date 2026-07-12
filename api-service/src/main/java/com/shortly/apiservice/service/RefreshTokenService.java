@@ -7,4 +7,5 @@ public interface RefreshTokenService {
     String createRefreshToken(UserInfo userInfo);
     AuthResponse refresh(String oldToken);
     void deleteToken(String token);
+    void revokeAllForUser(String email);
 }

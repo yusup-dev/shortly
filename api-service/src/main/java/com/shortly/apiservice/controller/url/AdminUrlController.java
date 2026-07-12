@@ -9,6 +9,7 @@ import com.shortly.apiservice.dto.response.UrlResponse;
 import com.shortly.apiservice.service.UrlService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springdoc.core.annotations.ParameterObject;
@@ -63,9 +64,8 @@ public class AdminUrlController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<UrlResponse>> update(
             @PathVariable UUID id,
-            @RequestBody UpdateUrlRequest updateUrlRequest,
+            @Valid @RequestBody UpdateUrlRequest updateUrlRequest,
             HttpServletRequest request
-
     ) {
         UrlResponse data = urlService.updateForAdmin(id, updateUrlRequest, request);
         return ResponseEntity.ok(
@@ -94,7 +94,7 @@ public class AdminUrlController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<ApiResponse<UrlResponse>> updateStatus(
             @PathVariable UUID id,
-            @RequestBody UpdateStatusRequest updateStatusRequest,
+            @Valid @RequestBody UpdateStatusRequest updateStatusRequest,
             HttpServletRequest request
     ) {
         UrlResponse data = urlService.updateStatusForAdmin(

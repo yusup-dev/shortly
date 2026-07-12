@@ -45,6 +45,7 @@ public class UserDetailsImpl implements UserDetailsService {
                 .email(data.getEmail())
                 .password(data.getPassword())
                 .role(data.getRoleName())
+                .status(data.getStatus())
                 .build();
 
         cacheService.put(cacheKey, userInfo, Duration.ofHours(24));

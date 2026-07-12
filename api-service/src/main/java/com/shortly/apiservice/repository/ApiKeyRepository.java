@@ -49,4 +49,19 @@ public interface ApiKeyRepository extends JpaRepository<ApiKey, UUID> {
         ORDER BY ak.created_at DESC
         """, nativeQuery = true)
     List<ApiKeyListProjection> findListByUserId(@Param("userId") UUID userId);
+
+    List<ApiKey> findByUserId(UUID userId);
+
+    @Query(value = """
+        SELECT COUNT(*) FROM api_keys WHERE deleted_at IS NULL
+        """, nativeQuery = true)
+    long countAll();
+
+    @Query(value = """
+        SELECT COUNT(*) FROM api_keys
+        WHERE deleted_at IS NULL
+        AND status = 'ACTIVE'
+        AND expires_at > NOW()
+        """, nativeQuery = true)
+    long countActive();
 }

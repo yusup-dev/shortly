@@ -2,8 +2,7 @@ package com.shortly.apiservice.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.shortly.apiservice.entity.Role;
-import com.shortly.apiservice.entity.User;
+import com.shortly.apiservice.enumaration.StatusType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +28,7 @@ public class UserInfo implements UserDetails {
     private String email;
     private String password;
     private String role;
+    private String status;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -64,6 +64,6 @@ public class UserInfo implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return StatusType.ACTIVE.name().equals(status);
     }
 }

@@ -1,6 +1,7 @@
 package com.shortly.apiservice.configuration;
 
 import com.shortly.apiservice.constant.CacheConstants;
+import com.shortly.apiservice.exception.ApplicationException;
 import com.shortly.apiservice.service.CacheService;
 import com.shortly.apiservice.service.JwtService;
 import com.shortly.apiservice.service.impl.UserDetailsImpl;
@@ -43,12 +44,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (username != null && currentAuth == null) {
                     UserDetails userDetails = userDetailsImpl.loadUserByUsername(username);
+                    if (!userDetails.isEnabled()) {
+                        throw new ApplicationException(
+                                com.shortly.apiservice.enumaration.ExceptionType.ACCOUNT_SUSPENDED);
+                    }
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
             filterChain.doFilter(request, response);
+        } catch (ApplicationException exception) {
+            handlerExceptionResolver.resolveException(request, response, null, exception);
         } catch (InsufficientAuthenticationException exception) {
             handlerExceptionResolver.resolveException(request, response, null, exception);
         }

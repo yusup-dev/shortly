@@ -199,6 +199,9 @@ public class UrlServiceImpl implements UrlService {
         if (key.getUser() == null || !key.getUser().getId().equals(currentUser.getId())) {
             throw new ApplicationException(ExceptionType.FORBIDDEN, "API key ini bukan milik kamu");
         }
+        if (currentUser.getStatus() != StatusType.ACTIVE) {
+            throw new ApplicationException(ExceptionType.ACCOUNT_SUSPENDED);
+        }
         return key;
     }
 
@@ -559,6 +562,10 @@ public class UrlServiceImpl implements UrlService {
         Url url = urlRepository.findById(id)
                 .orElseThrow(() -> new ApplicationException(ExceptionType.SHORT_URL_NOT_FOUND));
 
+        if (!isValidUrl(updateUrlRequest.getOriginalUrl())) {
+            throw new ApplicationException(ExceptionType.INVALID_URL);
+        }
+
         url.setOriginalUrl(updateUrlRequest.getOriginalUrl());
 
         Url updated = urlRepository.save(url);
@@ -605,6 +612,13 @@ public class UrlServiceImpl implements UrlService {
             newStatus = StatusType.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
             throw new ApplicationException(ExceptionType.VALIDATION_ERROR, "Status tidak valid");
+        }
+
+        if (newStatus != StatusType.ACTIVE && newStatus != StatusType.SUSPENDED) {
+            throw new ApplicationException(
+                    ExceptionType.VALIDATION_ERROR,
+                    "Status hanya boleh ACTIVE atau SUSPENDED"
+            );
         }
 
         url.setStatus(newStatus);
