@@ -433,21 +433,3 @@ Format error response:
 | Public | GET `/{shortKey}` | Public (redirect) |
 
 Semua endpoint di atas otomatis muncul di Swagger UI (`/swagger-ui/`).
-
----
-
-## 12. Catatan Teknis
-
-### Sudah diperbaiki
-
-- Logout kini mem-blacklist access token di Redis (`token_blacklist:`) dan dicek `JwtAuthenticationFilter`, bukan sekadar menghapus refresh token.
-- `quotaService.decrementQuota` dipanggil saat URL dihapus (`delete` & `deleteForAdmin`).
-- Kolom `quotas.updated_at` dipetakan di entity `Quota` (`@UpdateTimestamp`).
-- `validateApiKey` mengecek status `ACTIVE` (selain expiry).
-- Seed user diisi `plan_id` (free->FREE, pro->PRO, admin->PRO) via `V14`.
-- Seed audit `target_type` dikoreksi dari `URL` menjadi `SHORT_URL` via `V14`.
-
-### Known / by-design (belum diubah, berisiko ke build)
-
-- Mismatch versi gRPC antar modul (proto `1.60.1` vs `kgs-service` BOM `1.58.0`).
-- Tipe generik `RedisTemplate` di `kgs-service` (`<String,Object>` di config vs `<String,String>` di service) - aman saat runtime karena hanya menyimpan string.
